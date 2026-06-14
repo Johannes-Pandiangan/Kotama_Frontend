@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search, Plus, Pencil, Trash2, X, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 
 const ITEMS_PER_PAGE = 4;
-const API_URL = "http://localhost:5000/api/gudang";
+const API_URL = "https://kotama-backend.vercel.app/api/gudang";
 
 const statusStyle = {
   Aman: { bg: "#d1fae5", color: "#059669" },
@@ -122,31 +122,15 @@ function UpdateStok({ barang, onSave, onCancel }) {
           <div>
             <label style={{ fontSize: "0.65rem", fontWeight: 600, color: "#6b7280", letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Jenis Transaksi</label>
             <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button" onClick={() => { setPergerakan("masuk"); setErrorMsg(""); }}
-                className="flex items-center justify-center gap-2 py-2.5 rounded-lg transition-colors cursor-pointer outline-none font-semibold text-sm"
-                style={{ border: `1px solid ${pergerakan === "masuk" ? "#0d7a6b" : "#e5e7eb"}`, backgroundColor: pergerakan === "masuk" ? "#e8f5f2" : "#fff", color: pergerakan === "masuk" ? "#0d7a6b" : "#6b7280" }}
-              >
-                <ArrowUpRight size={16} /> Stok Masuk
-              </button>
-              <button
-                type="button" onClick={() => { setPergerakan("keluar"); setErrorMsg(""); }}
-                className="flex items-center justify-center gap-2 py-2.5 rounded-lg transition-colors cursor-pointer outline-none font-semibold text-sm"
-                style={{ border: `1px solid ${pergerakan === "keluar" ? "#ef4444" : "#e5e7eb"}`, backgroundColor: pergerakan === "keluar" ? "#fee2e2" : "#fff", color: pergerakan === "keluar" ? "#ef4444" : "#6b7280" }}
-              >
-                <ArrowDownLeft size={16} /> Stok Keluar
-              </button>
+              <button type="button" onClick={() => { setPergerakan("masuk"); setErrorMsg(""); }} className="flex items-center justify-center gap-2 py-2.5 rounded-lg transition-colors cursor-pointer outline-none font-semibold text-sm" style={{ border: `1px solid ${pergerakan === "masuk" ? "#0d7a6b" : "#e5e7eb"}`, backgroundColor: pergerakan === "masuk" ? "#e8f5f2" : "#fff", color: pergerakan === "masuk" ? "#0d7a6b" : "#6b7280" }}><ArrowUpRight size={16} /> Stok Masuk</button>
+              <button type="button" onClick={() => { setPergerakan("keluar"); setErrorMsg(""); }} className="flex items-center justify-center gap-2 py-2.5 rounded-lg transition-colors cursor-pointer outline-none font-semibold text-sm" style={{ border: `1px solid ${pergerakan === "keluar" ? "#ef4444" : "#e5e7eb"}`, backgroundColor: pergerakan === "keluar" ? "#fee2e2" : "#fff", color: pergerakan === "keluar" ? "#ef4444" : "#6b7280" }}><ArrowDownLeft size={16} /> Stok Keluar</button>
             </div>
           </div>
 
           {pergerakan === "keluar" && (
             <div>
               <label style={{ fontSize: "0.65rem", fontWeight: 600, color: "#6b7280", letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Nama Pengambil</label>
-              <select
-                value={pengambil}
-                onChange={(e) => { setPengambil(e.target.value); setErrorMsg(""); }}
-                style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: 8, padding: "10px 12px", fontSize: "0.9rem", color: "#111827", outline: "none", backgroundColor: "#fff" }}
-              >
+              <select value={pengambil} onChange={(e) => { setPengambil(e.target.value); setErrorMsg(""); }} style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: 8, padding: "10px 12px", fontSize: "0.9rem", color: "#111827", outline: "none", backgroundColor: "#fff" }}>
                 <option value="">-- Pilih Nama Pekerja --</option>
                 {DAFTAR_PEKERJA.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
@@ -155,19 +139,14 @@ function UpdateStok({ barang, onSave, onCancel }) {
 
           <div>
             <label style={{ fontSize: "0.65rem", fontWeight: 600, color: "#6b7280", letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Jumlah Barang</label>
-            <input
-              type="number" value={jumlah} onChange={(e) => { setJumlah(e.target.value); setErrorMsg(""); }} placeholder="Masukkan kuantitas..." min={1} required
-              style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: 8, padding: "10px 12px", fontSize: "0.9rem", color: "#111827", outline: "none", backgroundColor: "#fff", boxSizing: "border-box" }}
-            />
+            <input type="number" value={jumlah} onChange={(e) => { setJumlah(e.target.value); setErrorMsg(""); }} placeholder="Masukkan kuantitas..." min={1} required style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: 8, padding: "10px 12px", fontSize: "0.9rem", color: "#111827", outline: "none", backgroundColor: "#fff", boxSizing: "border-box" }} />
             {errorMsg && <p className="text-xs text-red-500 mt-1 font-medium">{errorMsg}</p>}
             <p className="text-[11px] text-gray-400 mt-1">Stok saat ini: <span className="font-bold">{barang.stok} {barang.satuan}</span></p>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-2">
             <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 cursor-pointer border-none">Batal</button>
-            <button type="submit" className="px-5 py-2 rounded-lg text-white text-sm font-semibold cursor-pointer border-none transition-colors" style={{ backgroundColor: pergerakan === "masuk" ? "#0d7a6b" : "#ef4444" }}>
-              {pergerakan === "masuk" ? "Konfirmasi Masuk" : "Konfirmasi Keluar"}
-            </button>
+            <button type="submit" className="px-5 py-2 rounded-lg text-white text-sm font-semibold cursor-pointer border-none transition-colors" style={{ backgroundColor: pergerakan === "masuk" ? "#0d7a6b" : "#ef4444" }}>{pergerakan === "masuk" ? "Konfirmasi Masuk" : "Konfirmasi Keluar"}</button>
           </div>
         </form>
       </div>
@@ -191,34 +170,16 @@ function ConfirmDelete({ nama, onConfirm, onCancel }) {
   );
 }
 
-export function DataGudang() {
-  const [data, setData] = useState([]);
+// MENERIMA PROPS DARI App.jsx
+export function DataGudang({ data, refreshData, isLoading }) {
   const [search, setSearch] = useState("");
   const [filterKat, setFilterKat] = useState("Semua");
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
 
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [updateTarget, setUpdateTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-
-  const fetchDataGudang = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(API_URL);
-      const result = await res.json();
-      setData(result);
-    } catch (error) {
-      console.error("Gagal mengambil data dari server:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDataGudang();
-  }, []);
 
   const filtered = data.filter((item) => {
     const matchSearch = item.nama.toLowerCase().includes(search.toLowerCase()) || item.type.toLowerCase().includes(search.toLowerCase());
@@ -235,67 +196,45 @@ export function DataGudang() {
   const totalPages = Math.max(1, Math.ceil(sortedFiltered.length / ITEMS_PER_PAGE));
   const paginated = sortedFiltered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
+  // Fungsi API tetap dipertahankan, namun menggunakan "refreshData" dari induk
   async function handleSaveBarang(formData) {
     try {
       if (editTarget) {
-        await fetch(`${API_URL}/${editTarget.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
+        await fetch(`${API_URL}/${editTarget.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) });
       } else {
-        await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
+        await fetch(API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) });
       }
-      fetchDataGudang();
+      refreshData();
       setShowForm(false);
       setEditTarget(null);
-    } catch (error) {
-      console.error("Gagal menyimpan barang", error);
-    }
+    } catch (error) { console.error("Gagal menyimpan barang", error); }
   }
 
   async function handleUpdateStok(id, delta, pergerakan, pengambil) {
     try {
-      await fetch(`${API_URL}/stok/${id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ delta, pergerakan, pengambil }),
-      });
-      fetchDataGudang();
+      await fetch(`${API_URL}/stok/${id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ delta, pergerakan, pengambil }) });
+      refreshData();
       setUpdateTarget(null);
-    } catch (error) {
-      console.error("Gagal update stok", error);
-    }
+    } catch (error) { console.error("Gagal update stok", error); }
   }
 
   async function handleDelete(id) {
     try {
       await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-      fetchDataGudang();
+      refreshData();
       setDeleteTarget(null);
       if (paginated.length === 1 && page > 1) setPage((p) => p - 1);
-    } catch (error) {
-      console.error("Gagal menghapus barang", error);
-    }
+    } catch (error) { console.error("Gagal menghapus barang", error); }
   }
 
   return (
     <div className="flex-1 flex flex-col min-h-screen" style={{ backgroundColor: "#f5f7fa" }}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-8 pt-7 pb-5 gap-4">
         <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#111827" }}>Data Gudang</h1>
-          <p style={{ fontSize: "0.875rem", color: "#6b7280", marginTop: 4 }}>Kelola inventaris dan stok material secara real-time.</p>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#111827" }}>Data Bahan Baku</h1>
         </div>
-        <button
-          onClick={() => { setEditTarget(null); setShowForm(true); }}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg w-full sm:w-auto transition-colors"
-          style={{ backgroundColor: "#0d7a6b", color: "#fff", border: "none", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600 }}
-        >
-          <Plus size={16} /> Tambah Material
+        <button onClick={() => { setEditTarget(null); setShowForm(true); }} className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg w-full sm:w-auto transition-colors" style={{ backgroundColor: "#0d7a6b", color: "#fff", border: "none", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600 }}>
+          <Plus size={16} /> Tambah Bahan Baku
         </button>
       </div>
 
@@ -303,7 +242,7 @@ export function DataGudang() {
         <div className="bg-white rounded-xl px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-sm" style={{ border: "1px solid #e5e7eb" }}>
           <div className="relative w-full sm:flex-1">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "#9ca3af" }} />
-            <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Cari Nama Material..." className="w-full rounded-lg pl-9 pr-4 py-2 outline-none text-sm bg-gray-50 border border-transparent focus:border-[#0d7a6b]" style={{ color: "#374151" }} />
+            <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Cari Nama Bahan Baku..." className="w-full rounded-lg pl-9 pr-4 py-2 outline-none text-sm bg-gray-50 border border-transparent focus:border-[#0d7a6b]" style={{ color: "#374151" }} />
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
             <span style={{ fontSize: "0.875rem", color: "#6b7280", fontWeight: 500 }}>Filter:</span>
@@ -331,8 +270,8 @@ export function DataGudang() {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
-                  <tr><td colSpan={7} className="py-14 text-center text-gray-400 font-semibold text-sm">Mengambil data dari server...</td></tr>
+                {isLoading ? (
+                  <tr><td colSpan={7} className="py-14 text-center text-gray-400 font-semibold text-sm">Mensinkronisasi data...</td></tr>
                 ) : paginated.length === 0 ? (
                   <tr><td colSpan={7} className="py-14 text-center text-gray-400 text-sm">Belum ada barang di database.</td></tr>
                 ) : (
@@ -342,16 +281,8 @@ export function DataGudang() {
                       <td className="py-4 px-5 text-sm text-gray-700">{item.kategori}</td>
                       <td className="py-4 px-5 text-sm text-gray-700">{item.type}</td>
                       <td className="py-4 px-5 font-semibold text-sm text-gray-900">{item.stok} <span className="text-gray-500 font-normal">{item.satuan}</span></td>
-                      <td className="py-4 px-5">
-                        <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: statusStyle[item.status]?.bg || "#e5e7eb", color: statusStyle[item.status]?.color || "#374151" }}>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-5">
-                        <button onClick={() => setUpdateTarget(item)} className="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer border-none outline-none" style={{ backgroundColor: "#e8f5f2", color: "#0d7a6b" }}>
-                          Update
-                        </button>
-                      </td>
+                      <td className="py-4 px-5"><span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: statusStyle[item.status]?.bg || "#e5e7eb", color: statusStyle[item.status]?.color || "#374151" }}>{item.status}</span></td>
+                      <td className="py-4 px-5"><button onClick={() => setUpdateTarget(item)} className="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer border-none outline-none" style={{ backgroundColor: "#0d7a6b", color: "#ffffff" }}>Update</button></td>
                       <td className="py-4 px-5">
                         <div className="flex items-center gap-2">
                           <button onClick={() => { setEditTarget(item); setShowForm(true); }} className="p-1.5 rounded-md text-gray-400 hover:text-[#0d7a6b] hover:bg-gray-100 transition-colors border-none cursor-pointer"><Pencil size={16} /></button>
@@ -364,7 +295,6 @@ export function DataGudang() {
               </tbody>
             </table>
           </div>
-
           <div className="flex items-center justify-between px-5 py-3.5" style={{ borderTop: "1px solid #f3f4f6" }}>
             <p style={{ fontSize: "0.8125rem", color: "#6b7280" }}>Halaman {page} dari {totalPages}</p>
             <div className="flex items-center gap-1">

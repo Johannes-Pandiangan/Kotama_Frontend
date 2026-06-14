@@ -1,22 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search, Plus, Pencil, Trash2, ArrowUpRight, ArrowDownLeft, X } from "lucide-react";
 
 const ITEMS_PER_PAGE = 5;
-const API_URL = "http://localhost:5000/api/barang-jadi";
+const API_URL = "https://kotama-backend.vercel.app/api/barang-jadi";
 
-export function DataBarangJadi() {
-  const [items, setItems] = useState([]);
+// MENERIMA PROPS DARI App.jsx
+export function DataBarangJadi({ items, refreshData, isLoading }) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
 
-  // State Kontrol Popup/Modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isUpdateStockModalOpen, setIsUpdateStockModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  // State Form Input
   const [selectedItem, setSelectedItem] = useState(null);
   const [formKode, setFormKode] = useState(""); 
   const [formNama, setFormNama] = useState("");
@@ -26,43 +23,15 @@ export function DataBarangJadi() {
   const [stockDelta, setStockDelta] = useState("");
   const [stockError, setStockError] = useState(""); 
 
-  // Styling Status yang diambil dari database
   const getStatusStyle = (status) => {
     if (status === "Habis") return { bg: "#fee2e2", text: "#ef4444" };
     if (status === "Menipis") return { bg: "#fef3c7", text: "#d97706" };
-    return { bg: "#e8f5f2", text: "#0d7a6b" }; // Aman
+    return { bg: "#e8f5f2", text: "#0d7a6b" };
   };
 
-  // ==========================================
-  // FETCH DATA DARI API
-  // ==========================================
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(API_URL);
-      const result = await res.json();
-      setItems(result);
-    } catch (error) {
-      console.error("Gagal mengambil data sepatu:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  // ==========================================
-  // LOGIKA FILTER BARU (NAMA ATAU KODE BARANG)
-  // ==========================================
   const filteredItems = items.filter((item) => {
     const matchNama = item.nama.toLowerCase().includes(search.toLowerCase());
-    const matchKode = item.kode_barang 
-      ? item.kode_barang.toLowerCase().includes(search.toLowerCase()) 
-      : false;
-    
-    // Barang akan muncul jika Nama ATAU Kode cocok dengan kata kunci pencarian
+    const matchKode = item.kode_barang ? item.kode_barang.toLowerCase().includes(search.toLowerCase()) : false;
     return matchNama || matchKode;
   });
 
@@ -75,91 +44,53 @@ export function DataBarangJadi() {
   const totalPages = Math.max(1, Math.ceil(sortedItems.length / ITEMS_PER_PAGE));
   const paginatedItems = sortedItems.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  // ==========================================
-  // API POST: TAMBAH BARANG
-  // ==========================================
   const handleAddBarang = async (e) => {
     e.preventDefault();
     try {
-      await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kode_barang: formKode, nama: formNama, ukuran: parseInt(formUkuran), stok: parseInt(formStok) }),
-      });
-      fetchData();
-      setIsAddModalOpen(false);
-      resetForm();
-    } catch (error) {
-      console.error("Gagal menambah sepatu:", error);
-    }
+      await fetch(API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kode_barang: formKode, nama: formNama, ukuran: parseInt(formUkuran), stok: parseInt(formStok) }) });
+      refreshData();
+      setIsAddModalOpen(false); resetForm();
+    } catch (error) { console.error("Gagal menambah sepatu:", error); }
   };
 
-  // ==========================================
-  // API PUT: EDIT BARANG
-  // ==========================================
   const openEditModal = (item) => {
-    setSelectedItem(item); setFormKode(item.kode_barang || ""); setFormNama(item.nama); setFormUkuran(item.ukuran); setFormStok(item.stok);
-    setIsEditModalOpen(true);
+    setSelectedItem(item); setFormKode(item.kode_barang || ""); setFormNama(item.nama); setFormUkuran(item.ukuran); setFormStok(item.stok); setIsEditModalOpen(true);
   };
 
   const handleEditBarang = async (e) => {
     e.preventDefault();
     try {
-      await fetch(`${API_URL}/${selectedItem.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kode_barang: formKode, nama: formNama, ukuran: parseInt(formUkuran), stok: parseInt(formStok) }),
-      });
-      fetchData();
-      setIsEditModalOpen(false);
-      resetForm();
-    } catch (error) {
-      console.error("Gagal mengedit sepatu:", error);
-    }
+      await fetch(`${API_URL}/${selectedItem.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kode_barang: formKode, nama: formNama, ukuran: parseInt(formUkuran), stok: parseInt(formStok) }) });
+      refreshData();
+      setIsEditModalOpen(false); resetForm();
+    } catch (error) { console.error("Gagal mengedit sepatu:", error); }
   };
 
-  // ==========================================
-  // API POST: UPDATE STOK SEPATU
-  // ==========================================
   const openUpdateStockModal = (item) => {
-    setSelectedItem(item); setStockType("masuk"); setStockDelta(""); setStockError("");
-    setIsUpdateStockModalOpen(true);
+    setSelectedItem(item); setStockType("masuk"); setStockDelta(""); setStockError(""); setIsUpdateStockModalOpen(true);
   };
 
   const handleUpdateStock = async (e) => {
     e.preventDefault();
     const delta = parseInt(stockDelta);
-
     if (stockType === "keluar" && delta > selectedItem.stok) {
-      setStockError("Gagal: Jumlah keluar melebihi kapasitas stok saat ini!");
-      return;
+      setStockError("Gagal: Jumlah keluar melebihi kapasitas stok saat ini!"); return;
     }
 
     try {
-      await fetch(`${API_URL}/stok/${selectedItem.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ delta, pergerakan: stockType }),
-      });
-      fetchData();
+      await fetch(`${API_URL}/stok/${selectedItem.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ delta, pergerakan: stockType }) });
+      refreshData();
       setIsUpdateStockModalOpen(false);
-    } catch (error) {
-      console.error("Gagal update stok sepatu:", error);
-    }
+    } catch (error) { console.error("Gagal update stok sepatu:", error); }
   };
 
-  // ==========================================
-  // API DELETE: HAPUS BARANG
-  // ==========================================
   const handleDeleteBarang = async () => {
     try {
       await fetch(`${API_URL}/${selectedItem.id}`, { method: "DELETE" });
-      fetchData();
+      refreshData();
       setIsDeleteModalOpen(false);
       if (paginatedItems.length === 1 && page > 1) setPage(page - 1);
-    } catch (error) {
-      console.error("Gagal menghapus sepatu:", error);
-    }
+    } catch (error) { console.error("Gagal menghapus sepatu:", error); }
   };
 
   const resetForm = () => { setFormKode(""); setFormNama(""); setFormUkuran(""); setFormStok(""); setSelectedItem(null); setStockError(""); };
@@ -169,13 +100,8 @@ export function DataBarangJadi() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-8 pt-7 pb-5 gap-4">
         <div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#111827" }}>Data Barang Jadi (Sepatu)</h1>
-          <p style={{ fontSize: "0.875rem", color: "#6b7280", marginTop: 4 }}>Manajemen informasi stok produk sepatu siap edar</p>
         </div>
-        <button
-          onClick={() => { resetForm(); setIsAddModalOpen(true); }}
-          className="flex items-center justify-center gap-2 text-white px-4 py-2.5 rounded-lg transition-colors shadow-sm outline-none border-none cursor-pointer w-full sm:w-auto"
-          style={{ backgroundColor: "#0d7a6b", fontSize: "0.875rem", fontWeight: 600 }}
-        >
+        <button onClick={() => { resetForm(); setIsAddModalOpen(true); }} className="flex items-center justify-center gap-2 text-white px-4 py-2.5 rounded-lg transition-colors shadow-sm outline-none border-none cursor-pointer w-full sm:w-auto" style={{ backgroundColor: "#0d7a6b", fontSize: "0.875rem", fontWeight: 600 }}>
           <Plus size={16} /> Tambah Barang
         </button>
       </div>
@@ -204,8 +130,8 @@ export function DataBarangJadi() {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
-                  <tr><td colSpan={7} className="py-14 text-center text-gray-400 font-semibold text-sm">Mengambil data dari server...</td></tr>
+                {isLoading ? (
+                  <tr><td colSpan={7} className="py-14 text-center text-gray-400 font-semibold text-sm">Mensinkronisasi data...</td></tr>
                 ) : paginatedItems.length === 0 ? (
                   <tr><td colSpan={7} className="py-14 text-center text-gray-400 text-sm">Tidak ada produk sepatu di database.</td></tr>
                 ) : (
@@ -217,12 +143,8 @@ export function DataBarangJadi() {
                         <td className="py-3.5 px-6 font-medium text-sm text-gray-900">{item.nama}</td>
                         <td className="py-3.5 px-6 text-center text-sm text-gray-700">{item.ukuran}</td>
                         <td className="py-3.5 px-6 text-center font-bold text-sm text-gray-900">{item.stok}</td>
-                        <td className="py-3.5 px-6 text-center">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium" style={{ fontSize: "0.75rem", backgroundColor: status.bg, color: status.text }}>{item.status}</span>
-                        </td>
-                        <td className="py-3.5 px-6 text-center flex justify-center">
-                          <button onClick={() => openUpdateStockModal(item)} className="text-xs font-semibold px-3 py-1.5 rounded-md transition-colors border-none outline-none cursor-pointer" style={{ backgroundColor: "#e8f5f2", color: "#0d7a6b" }}>Update</button>
-                        </td>
+                        <td className="py-3.5 px-6 text-center"><span className="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium" style={{ fontSize: "0.75rem", backgroundColor: status.bg, color: status.text }}>{item.status}</span></td>
+                        <td className="py-3.5 px-6 text-center flex justify-center"><button onClick={() => openUpdateStockModal(item)} className="text-xs font-semibold px-3 py-1.5 rounded-md transition-colors border-none outline-none cursor-pointer" style={{ backgroundColor: "#0d7a6b", color: "#ffffff" }}>Update</button></td>
                         <td className="py-3.5 px-6 text-center">
                           <div className="flex items-center justify-center gap-2">
                             <button onClick={() => openEditModal(item)} className="p-1.5 rounded-md text-gray-500 hover:text-[#0d7a6b] hover:bg-gray-100 transition-colors border-none outline-none cursor-pointer"><Pencil size={15} /></button>
@@ -248,7 +170,6 @@ export function DataBarangJadi() {
         <p className="text-center" style={{ fontSize: "0.8rem", color: "#9ca3af" }}>© USU Agile 2026</p>
       </div>
 
-      {/* MODAL TAMBAH BARANG */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md animate-in zoom-in-95 duration-200">
@@ -269,7 +190,6 @@ export function DataBarangJadi() {
         </div>
       )}
 
-      {/* MODAL EDIT BARANG */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md animate-in zoom-in-95 duration-200">
@@ -290,7 +210,6 @@ export function DataBarangJadi() {
         </div>
       )}
 
-      {/* MODAL UPDATE STOK */}
       {isUpdateStockModalOpen && selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md animate-in zoom-in-95 duration-200">
@@ -302,36 +221,25 @@ export function DataBarangJadi() {
               <div>
                 <label className="text-xs font-semibold text-gray-600 block mb-1.5">Jenis Transaksi</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => { setStockType("masuk"); setStockError(""); }} className="flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-sm transition-colors border cursor-pointer outline-none" style={{ backgroundColor: stockType === "masuk" ? "#e8f5f2" : "#fff", color: stockType === "masuk" ? "#0d7a6b" : "#4b5563", borderColor: stockType === "masuk" ? "#0d7a6b" : "#e5e7eb" }}>
-                    <ArrowUpRight size={16} /> Stok Masuk
-                  </button>
-                  <button type="button" onClick={() => { setStockType("keluar"); setStockError(""); }} className="flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-sm transition-colors border cursor-pointer outline-none" style={{ backgroundColor: stockType === "keluar" ? "#fee2e2" : "#fff", color: stockType === "keluar" ? "#ef4444" : "#4b5563", borderColor: stockType === "keluar" ? "#ef4444" : "#e5e7eb" }}>
-                    <ArrowDownLeft size={16} /> Stok Keluar
-                  </button>
+                  <button type="button" onClick={() => { setStockType("masuk"); setStockError(""); }} className="flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-sm transition-colors border cursor-pointer outline-none" style={{ backgroundColor: stockType === "masuk" ? "#e8f5f2" : "#fff", color: stockType === "masuk" ? "#0d7a6b" : "#4b5563", borderColor: stockType === "masuk" ? "#0d7a6b" : "#e5e7eb" }}><ArrowUpRight size={16} /> Stok Masuk</button>
+                  <button type="button" onClick={() => { setStockType("keluar"); setStockError(""); }} className="flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-sm transition-colors border cursor-pointer outline-none" style={{ backgroundColor: stockType === "keluar" ? "#fee2e2" : "#fff", color: stockType === "keluar" ? "#ef4444" : "#4b5563", borderColor: stockType === "keluar" ? "#ef4444" : "#e5e7eb" }}><ArrowDownLeft size={16} /> Stok Keluar</button>
                 </div>
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-600 block mb-1">Jumlah Barang</label>
                 <input type="number" required min="1" value={stockDelta} onChange={(e) => { setStockDelta(e.target.value); setStockError(""); }} placeholder="Masukkan kuantitas jumlah..." className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" />
-                
-                {stockError && (
-                  <p className="text-xs text-red-500 mt-1 font-medium">{stockError}</p>
-                )}
-
+                {stockError && <p className="text-xs text-red-500 mt-1 font-medium">{stockError}</p>}
                 <p className="text-[11px] text-gray-400 mt-1">Stok saat ini: <span className="font-bold">{selectedItem.stok}</span></p>
               </div>
               <div className="flex items-center justify-end gap-2 mt-4">
                 <button type="button" onClick={() => setIsUpdateStockModalOpen(false)} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors border-none cursor-pointer">Batal</button>
-                <button type="submit" className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors border-none cursor-pointer" style={{ backgroundColor: stockType === "masuk" ? "#0d7a6b" : "#ef4444" }}>
-                  {stockType === "masuk" ? "Konfirmasi Masuk" : "Konfirmasi Keluar"}
-                </button>
+                <button type="submit" className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors border-none cursor-pointer" style={{ backgroundColor: stockType === "masuk" ? "#0d7a6b" : "#ef4444" }}>{stockType === "masuk" ? "Konfirmasi Masuk" : "Konfirmasi Keluar"}</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* MODAL HAPUS BARANG */}
       {isDeleteModalOpen && selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm text-center animate-in zoom-in-95 duration-200">
