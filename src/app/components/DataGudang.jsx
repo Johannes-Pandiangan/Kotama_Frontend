@@ -84,7 +84,7 @@ function UpdateStok({ barang, onSave, onCancel }) {
   const [pengambil, setPengambil] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const DAFTAR_PEKERJA = ["Pak Saiful", "Pak Ramli", "Pak Adi", "Pak Sutrisna", "Pak Zuldeni", "Pak Jamal", "Pak Kamal", "Pak Purnomo", "Pak Ali", "Pak Sahrul", "Pak Anas"];
+  const DAFTAR_PEKERJA = ["Pengrajin 1", "Pengrajin 2", "Pengrajin 3", "Pengrajin 4", "Pengrajin 5", "Pengrajin 6", "Pengrajin 7", "Pengrajin 8", "Pengrajin 9", "Pengrajin 10", "Pengrajin 11", "Pengrajin 12", "Pengrajin 13", "Pengrajin 14", "Pengrajin 15", "Pengrajin 16", "Pengrajin 17", "Pengrajin 18", "Pengrajin 19", "Pengrajin 20", "Pengrajin 21", "Pengrajin 22", "Pengrajin 23", "Pengrajin 24", "Pengrajin 25", "Pengrajin 26", "Pengrajin 27", "Pengrajin 28", "Pengrajin 29", "Pengrajin 30"];
 
   function handleSave(e) {
     e.preventDefault();
