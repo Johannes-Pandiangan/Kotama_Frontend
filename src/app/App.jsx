@@ -91,7 +91,7 @@ export default function App() {
       <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-gray-200 z-10 sticky top-0">
         <div className="flex items-center gap-2">
           <div className="flex items-center justify-center rounded-lg w-8 h-8 font-bold" style={{ backgroundColor: "#0d7a6b", color: "#fff" }}>K</div>
-          <span className="font-bold text-gray-900">Kotama App</span>
+          <span className="font-bold text-gray-900">Kotama Warehouse</span>
         </div>
         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 bg-gray-100 rounded-md text-gray-600 outline-none border-none cursor-pointer">
           {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
