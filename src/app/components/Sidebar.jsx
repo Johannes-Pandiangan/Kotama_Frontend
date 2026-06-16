@@ -1,9 +1,10 @@
-import { LayoutDashboard, Warehouse, Package, History, HelpCircle, LogOut } from "lucide-react";
+import { LayoutDashboard, Warehouse, Package, History, HelpCircle, LogOut, Users } from "lucide-react";
 
 const navItems = [
   { id: "beranda", label: "Beranda", icon: LayoutDashboard },
   { id: "data-gudang", label: "Data Bahan Baku", icon: Warehouse },
   { id: "data-barang-jadi", label: "Data Barang Jadi", icon: Package },
+  { id: "data-pengrajin", label: "Data Pengrajin", icon: Users },
   { id: "riwayat", label: "Riwayat", icon: History },
 ];
 
