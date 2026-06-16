@@ -69,7 +69,7 @@ function FormBarang({ initial, onSave, onCancel }) {
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-2">
-            <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 cursor-pointer border-none">Batal</button>
+            <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 cursor-pointer border-none hover:bg-gray-200">Batal</button>
             <button type="submit" className="px-5 py-2 rounded-lg text-white text-sm font-semibold cursor-pointer border-none" style={{ backgroundColor: "#0d7a6b" }}>Simpan</button>
           </div>
         </form>
@@ -78,13 +78,11 @@ function FormBarang({ initial, onSave, onCancel }) {
   );
 }
 
-function UpdateStok({ barang, onSave, onCancel }) {
+function UpdateStok({ barang, dataPengrajin, onSave, onCancel }) {
   const [pergerakan, setPergerakan] = useState("masuk");
   const [jumlah, setJumlah] = useState("");
   const [pengambil, setPengambil] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
-
-  const DAFTAR_PEKERJA = ["Pengrajin 1", "Pengrajin 2", "Pengrajin 3", "Pengrajin 4", "Pengrajin 5", "Pengrajin 6", "Pengrajin 7", "Pengrajin 8", "Pengrajin 9", "Pengrajin 10", "Pengrajin 11", "Pengrajin 12", "Pengrajin 13", "Pengrajin 14", "Pengrajin 15", "Pengrajin 16", "Pengrajin 17", "Pengrajin 18", "Pengrajin 19", "Pengrajin 20", "Pengrajin 21", "Pengrajin 22", "Pengrajin 23", "Pengrajin 24", "Pengrajin 25", "Pengrajin 26", "Pengrajin 27", "Pengrajin 28", "Pengrajin 29", "Pengrajin 30"];
 
   function handleSave(e) {
     e.preventDefault();
@@ -132,7 +130,7 @@ function UpdateStok({ barang, onSave, onCancel }) {
               <label style={{ fontSize: "0.65rem", fontWeight: 600, color: "#6b7280", letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Nama Pengambil</label>
               <select value={pengambil} onChange={(e) => { setPengambil(e.target.value); setErrorMsg(""); }} style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: 8, padding: "10px 12px", fontSize: "0.9rem", color: "#111827", outline: "none", backgroundColor: "#fff" }}>
                 <option value="">-- Pilih Nama Pekerja --</option>
-                {DAFTAR_PEKERJA.map((p) => <option key={p} value={p}>{p}</option>)}
+                {dataPengrajin && dataPengrajin.map((p) => <option key={p.id} value={p.nama}>{p.nama}</option>)}
               </select>
             </div>
           )}
@@ -159,7 +157,7 @@ function ConfirmDelete({ nama, onConfirm, onCancel }) {
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: "rgba(0,0,0,0.35)" }}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-center w-12 h-12 rounded-full mx-auto mb-3" style={{ backgroundColor: "#fee2e2" }}><Trash2 size={24} style={{ color: "#ef4444" }} /></div>
-        <h3 className="text-base font-bold text-gray-900 mb-1">Hapus Barang?</h3>
+        <h3 className="text-base font-bold text-gray-900 mb-1">Hapus Bahan Baku?</h3>
         <p className="text-xs text-gray-500 px-2 mb-5">Apakah Anda yakin ingin menghapus <span className="font-semibold text-gray-800">"{nama}"</span>?</p>
         <div className="flex items-center justify-center gap-2">
           <button onClick={onCancel} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none cursor-pointer hover:bg-gray-200 transition-colors">Batal</button>
@@ -171,7 +169,7 @@ function ConfirmDelete({ nama, onConfirm, onCancel }) {
 }
 
 // MENERIMA PROPS DARI App.jsx
-export function DataGudang({ data, refreshData, isLoading, showNotification }) {
+export function DataGudang({ data, dataPengrajin, refreshData, isLoading, showNotification }) {
   const [search, setSearch] = useState("");
   const [filterKat, setFilterKat] = useState("Semua");
   const [page, setPage] = useState(1);
@@ -310,7 +308,7 @@ export function DataGudang({ data, refreshData, isLoading, showNotification }) {
       </div>
 
       {showForm && <FormBarang initial={editTarget ?? undefined} onSave={handleSaveBarang} onCancel={() => { setShowForm(false); setEditTarget(null); }} />}
-      {updateTarget && <UpdateStok barang={updateTarget} onSave={handleUpdateStok} onCancel={() => setUpdateTarget(null)} />}
+      {updateTarget && <UpdateStok barang={updateTarget} dataPengrajin={dataPengrajin} onSave={handleUpdateStok} onCancel={() => setUpdateTarget(null)} />}
       {deleteTarget && <ConfirmDelete nama={deleteTarget.nama} onConfirm={() => handleDelete(deleteTarget.id)} onCancel={() => setDeleteTarget(null)} />}
     </div>
   );

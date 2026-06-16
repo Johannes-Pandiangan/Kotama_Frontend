@@ -5,6 +5,7 @@ import { Beranda } from "./components/Beranda";
 import { DataGudang } from "./components/DataGudang";
 import { DataBarangJadi } from "./components/DataBarangJadi";
 import { Riwayat } from "./components/Riwayat";
+import { DataPengrajin } from "./components/DataPengrajin";
 import { Menu, X, CheckCircle2, LogOut } from "lucide-react"; 
 
 export default function App() {
@@ -45,22 +46,25 @@ export default function App() {
   const [dataBarangJadi, setDataBarangJadi] = useState([]);
   const [dataRiwayat, setDataRiwayat] = useState([]);
   const [dataRiwayatSepatu, setDataRiwayatSepatu] = useState([]);
+  const [dataPengrajin, setDataPengrajin] = useState([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   const fetchAllData = async () => {
     try {
       setIsLoadingData(true);
-      const [resGudang, resBarangJadi, resRiwayat, resRiwayatSepatu] = await Promise.all([
+      const [resGudang, resBarangJadi, resRiwayat, resRiwayatSepatu, resPengrajin] = await Promise.all([
         fetch("https://kotama-backend.vercel.app/api/gudang"),
         fetch("https://kotama-backend.vercel.app/api/barang-jadi"),
         fetch("https://kotama-backend.vercel.app/api/riwayat"),
-        fetch("https://kotama-backend.vercel.app/api/riwayat-sepatu")
+        fetch("https://kotama-backend.vercel.app/api/riwayat-sepatu"),
+        fetch("https://kotama-backend.vercel.app/api/pengrajin")
       ]);
       
       setDataGudang(await resGudang.json());
       setDataBarangJadi(await resBarangJadi.json());
       setDataRiwayat(await resRiwayat.json());
       setDataRiwayatSepatu(await resRiwayatSepatu.json());
+      setDataPengrajin(await resPengrajin.json());
     } catch (error) {
       console.error("Gagal mengambil data pusat dari server:", error);
     } finally {
@@ -83,9 +87,11 @@ export default function App() {
       case "beranda": 
         return <Beranda dataGudang={dataGudang} dataBarangJadi={dataBarangJadi} dataRiwayat={dataRiwayat} isLoading={isLoadingData} />;
       case "data-gudang": 
-        return <DataGudang data={dataGudang} refreshData={fetchAllData} isLoading={isLoadingData} showNotification={showNotification} />;
+        return <DataGudang data={dataGudang} dataPengrajin={dataPengrajin} refreshData={fetchAllData} isLoading={isLoadingData} showNotification={showNotification} />;
       case "data-barang-jadi": 
         return <DataBarangJadi items={dataBarangJadi} refreshData={fetchAllData} isLoading={isLoadingData} showNotification={showNotification} />;
+      case "data-pengrajin":  // HALAMAN BARU
+        return <DataPengrajin dataPengrajin={dataPengrajin} historyGudang={dataRiwayat} refreshData={fetchAllData} isLoading={isLoadingData} showNotification={showNotification} />;
       case "riwayat": 
         return <Riwayat historyGudang={dataRiwayat} historySepatu={dataRiwayatSepatu} isLoading={isLoadingData} showNotification={showNotification} />;
       default: 
