@@ -5,7 +5,7 @@ const ITEMS_PER_PAGE = 5;
 const API_URL = "https://kotama-backend.vercel.app/api/barang-jadi";
 
 // MENERIMA PROPS DARI App.jsx
-export function DataBarangJadi({ items, refreshData, isLoading }) {
+export function DataBarangJadi({ items, refreshData, isLoading, showNotification }) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
@@ -50,6 +50,7 @@ export function DataBarangJadi({ items, refreshData, isLoading }) {
       await fetch(API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kode_barang: formKode, nama: formNama, ukuran: parseInt(formUkuran), stok: parseInt(formStok) }) });
       refreshData();
       setIsAddModalOpen(false); resetForm();
+      showNotification("Sepatu baru berhasil ditambahkan!");
     } catch (error) { console.error("Gagal menambah sepatu:", error); }
   };
 
@@ -63,6 +64,7 @@ export function DataBarangJadi({ items, refreshData, isLoading }) {
       await fetch(`${API_URL}/${selectedItem.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kode_barang: formKode, nama: formNama, ukuran: parseInt(formUkuran), stok: parseInt(formStok) }) });
       refreshData();
       setIsEditModalOpen(false); resetForm();
+      showNotification("Data sepatu berhasil diperbarui!");
     } catch (error) { console.error("Gagal mengedit sepatu:", error); }
   };
 
@@ -81,6 +83,7 @@ export function DataBarangJadi({ items, refreshData, isLoading }) {
       await fetch(`${API_URL}/stok/${selectedItem.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ delta, pergerakan: stockType }) });
       refreshData();
       setIsUpdateStockModalOpen(false);
+      showNotification("Stok sepatu berhasil diperbarui!");
     } catch (error) { console.error("Gagal update stok sepatu:", error); }
   };
 
@@ -90,6 +93,7 @@ export function DataBarangJadi({ items, refreshData, isLoading }) {
       refreshData();
       setIsDeleteModalOpen(false);
       if (paginatedItems.length === 1 && page > 1) setPage(page - 1);
+      showNotification("Data sepatu berhasil dihapus!");
     } catch (error) { console.error("Gagal menghapus sepatu:", error); }
   };
 
@@ -243,12 +247,12 @@ export function DataBarangJadi({ items, refreshData, isLoading }) {
       {isDeleteModalOpen && selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm text-center animate-in zoom-in-95 duration-200">
-            <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3"><Trash2 size={24} /></div>
+            <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3"><Trash2 size={24} style={{ color: "#ef4444" }} /></div>
             <h3 className="text-base font-bold text-gray-900 mb-1">Hapus Barang Jadi?</h3>
             <p className="text-xs text-gray-500 px-2 mb-5">Yakin ingin menghapus <span className="font-semibold text-gray-800">"{selectedItem.nama}"</span>?</p>
             <div className="flex items-center justify-center gap-2">
-              <button type="button" onClick={() => setIsDeleteModalOpen(false)} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none cursor-pointer">Batal</button>
-              <button type="button" onClick={handleDeleteBarang} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium text-white bg-red-500 border-none cursor-pointer">Ya, Hapus</button>
+              <button type="button" onClick={() => setIsDeleteModalOpen(false)} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none cursor-pointer hover:bg-gray-200 transition-colors">Batal</button>
+              <button type="button" onClick={handleDeleteBarang} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium text-white bg-red-500 border-none cursor-pointer hover:bg-red-700 transition-colors">Ya, Hapus</button>
             </div>
           </div>
         </div>

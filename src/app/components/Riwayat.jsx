@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
-import { Search, ChevronRight, ChevronLeft, FileSpreadsheet, CheckCircle2, X, Calendar } from "lucide-react";
+import { Search, ChevronRight, ChevronLeft, FileSpreadsheet, X, Calendar } from "lucide-react";
 import * as XLSX from "xlsx";
 
 const ITEMS_PER_PAGE = 5;
 
 // MENERIMA PROPS DARI App.jsx
-export function Riwayat({ historyGudang, historySepatu, isLoading }) {
+export function Riwayat({ historyGudang, historySepatu, isLoading, showNotification }) {
   const [tipeData, setTipeData] = useState("Bahan Baku");
   const [search, setSearch] = useState("");
   const [filterAktivitas, setFilterAktivitas] = useState("Semua");
   const [timeFilterMode, setTimeFilterMode] = useState("Semua"); 
   const [timeFilterValue, setTimeFilterValue] = useState(""); 
   const [page, setPage] = useState(1);
-  const [isExportSuccessOpen, setIsExportSuccessOpen] = useState(false);
+  
+  // Modal Konfirmasi Download
+  const [isConfirmExportOpen, setIsConfirmExportOpen] = useState(false);
 
   const currentData = tipeData === "Bahan Baku" ? historyGudang : historySepatu;
 
@@ -44,9 +46,7 @@ export function Riwayat({ historyGudang, historySepatu, isLoading }) {
 
   useEffect(() => { setPage(1); }, [tipeData, filterAktivitas, timeFilterMode, timeFilterValue, search]);
 
-  const handleExportExcel = () => {
-    if (filteredHistory.length === 0) return alert("Tidak ada data untuk diexport!");
-
+  const executeExport = () => {
     let dataToExport = [];
     let wscols = [];
 
@@ -67,17 +67,25 @@ export function Riwayat({ historyGudang, historySepatu, isLoading }) {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, `Riwayat_${tipeData}`);
     XLSX.writeFile(workbook, `Laporan_Riwayat_${tipeData.replace(" ", "_")}.xlsx`);
-    setIsExportSuccessOpen(true);
+    
+    // Tutup Modal & Panggil Toast
+    setIsConfirmExportOpen(false);
+    showNotification(`Laporan ${tipeData} berhasil diunduh dalam format Excel!`);
+  };
+
+  const handleExportClick = () => {
+    if (filteredHistory.length === 0) return alert("Tidak ada data untuk diexport!");
+    setIsConfirmExportOpen(true);
   };
 
   return (
     <div className="flex-1 flex flex-col min-h-screen" style={{ backgroundColor: "#f5f7fa" }}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-8 pt-7 pb-5 gap-4">
         <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#111827" }}>Riwayat Logistik</h1>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#111827" }}>Riwayat</h1>
           <p style={{ fontSize: "0.875rem", color: "#6b7280", marginTop: 4 }}>Memantau jejak otomatis arus masuk dan keluar barang</p>
         </div>
-        <button onClick={handleExportExcel} className="flex items-center justify-center gap-2 text-white px-4 py-2.5 rounded-lg transition-colors shadow-sm outline-none border-none cursor-pointer w-full sm:w-auto hover:bg-emerald-700" style={{ backgroundColor: "#107c41", fontSize: "0.875rem", fontWeight: 600 }}>
+        <button onClick={handleExportClick} className="flex items-center justify-center gap-2 text-white px-4 py-2.5 rounded-lg transition-colors shadow-sm outline-none border-none cursor-pointer w-full sm:w-auto hover:bg-emerald-700" style={{ backgroundColor: "#107c41", fontSize: "0.875rem", fontWeight: 600 }}>
           <FileSpreadsheet size={16} /> Export Excel
         </button>
       </div>
@@ -210,14 +218,19 @@ export function Riwayat({ historyGudang, historySepatu, isLoading }) {
         <p className="text-center" style={{ fontSize: "0.8rem", color: "#9ca3af" }}>© USU Agile 2026</p>
       </div>
 
-      {isExportSuccessOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center animate-in zoom-in-95 duration-200 relative">
-            <button onClick={() => setIsExportSuccessOpen(false)} className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors border-none bg-transparent cursor-pointer outline-none"><X size={18} /></button>
-            <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4"><CheckCircle2 size={32} /></div>
-            <h3 className="text-lg font-bold text-gray-900 mb-1.5">Export Berhasil!</h3>
-            <p className="text-xs text-gray-500 leading-relaxed px-2 mb-6">Seluruh data laporan riwayat logistik telah berhasil dikonversi dan diunduh ke perangkat Anda dalam format <span className="font-semibold text-emerald-700">.xlsx (Excel)</span>.</p>
-            <button onClick={() => setIsExportSuccessOpen(false)} className="w-full py-2.5 rounded-xl text-white font-semibold text-sm border-none shadow-sm transition-all cursor-pointer outline-none hover:bg-emerald-700" style={{ backgroundColor: "#107c41" }}>Selesai</button>
+      {/* MODAL KONFIRMASI UNDUH EXCEL */}
+      {isConfirmExportOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full mx-auto mb-3" style={{ backgroundColor: "#d1fae5" }}>
+              <FileSpreadsheet size={24} style={{ color: "#059669" }} />
+            </div>
+            <h3 className="text-base font-bold text-gray-900 mb-1">Unduh Laporan?</h3>
+            <p className="text-xs text-gray-500 px-2 mb-5">Apakah Anda yakin ingin mengunduh riwayat {tipeData} ke dalam format file Excel (.xlsx)?</p>
+            <div className="flex items-center justify-center gap-2">
+              <button onClick={() => setIsConfirmExportOpen(false)} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none cursor-pointer hover:bg-gray-200 transition-colors">Batal</button>
+              <button onClick={executeExport} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium text-white border-none cursor-pointer hover:bg-emerald-700 transition-colors" style={{ backgroundColor: "#107c41" }}>Ya, Unduh</button>
+            </div>
           </div>
         </div>
       )}
