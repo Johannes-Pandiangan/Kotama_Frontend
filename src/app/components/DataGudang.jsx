@@ -30,7 +30,7 @@ function FormBarang({ initial, onSave, onCancel }) {
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: "rgba(0,0,0,0.35)" }}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between px-6 pt-5 pb-4" style={{ borderBottom: "1px solid #f3f4f6" }}>
-          <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "#111827" }}>{initial ? "Edit Barang" : "Tambah Barang"}</h2>
+          <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "#111827" }}>{initial ? "Edit Barang" : "Tambah Bahan Baku Baru"}</h2>
           <button onClick={onCancel} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}><X size={20} /></button>
         </div>
 
@@ -108,7 +108,7 @@ function UpdateStok({ barang, onSave, onCancel }) {
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: "rgba(0,0,0,0.35)" }}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between px-6 pt-5 pb-4" style={{ borderBottom: "1px solid #f3f4f6" }}>
-          <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "#111827" }}>Update Stok Material</h2>
+          <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "#111827" }}>Update Stok Bahan Baku</h2>
           <button onClick={onCancel} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}><X size={20} /></button>
         </div>
 
@@ -145,7 +145,7 @@ function UpdateStok({ barang, onSave, onCancel }) {
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-2">
-            <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 cursor-pointer border-none">Batal</button>
+            <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 cursor-pointer border-none hover:bg-gray-200 transition-colors">Batal</button>
             <button type="submit" className="px-5 py-2 rounded-lg text-white text-sm font-semibold cursor-pointer border-none transition-colors" style={{ backgroundColor: pergerakan === "masuk" ? "#0d7a6b" : "#ef4444" }}>{pergerakan === "masuk" ? "Konfirmasi Masuk" : "Konfirmasi Keluar"}</button>
           </div>
         </form>
@@ -162,8 +162,8 @@ function ConfirmDelete({ nama, onConfirm, onCancel }) {
         <h3 className="text-base font-bold text-gray-900 mb-1">Hapus Barang?</h3>
         <p className="text-xs text-gray-500 px-2 mb-5">Apakah Anda yakin ingin menghapus <span className="font-semibold text-gray-800">"{nama}"</span>?</p>
         <div className="flex items-center justify-center gap-2">
-          <button onClick={onCancel} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none cursor-pointer">Batal</button>
-          <button onClick={onConfirm} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium text-white bg-red-500 border-none cursor-pointer">Ya, Hapus</button>
+          <button onClick={onCancel} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none cursor-pointer hover:bg-gray-200 transition-colors">Batal</button>
+          <button onClick={onConfirm} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium text-white bg-red-500 border-none cursor-pointer hover:bg-red-700 transition-colors">Ya, Hapus</button>
         </div>
       </div>
     </div>
@@ -171,7 +171,7 @@ function ConfirmDelete({ nama, onConfirm, onCancel }) {
 }
 
 // MENERIMA PROPS DARI App.jsx
-export function DataGudang({ data, refreshData, isLoading }) {
+export function DataGudang({ data, refreshData, isLoading, showNotification }) {
   const [search, setSearch] = useState("");
   const [filterKat, setFilterKat] = useState("Semua");
   const [page, setPage] = useState(1);
@@ -196,13 +196,14 @@ export function DataGudang({ data, refreshData, isLoading }) {
   const totalPages = Math.max(1, Math.ceil(sortedFiltered.length / ITEMS_PER_PAGE));
   const paginated = sortedFiltered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  // Fungsi API tetap dipertahankan, namun menggunakan "refreshData" dari induk
   async function handleSaveBarang(formData) {
     try {
       if (editTarget) {
         await fetch(`${API_URL}/${editTarget.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) });
+        showNotification("Data bahan baku berhasil diperbarui!");
       } else {
         await fetch(API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) });
+        showNotification("Bahan baku baru berhasil ditambahkan!");
       }
       refreshData();
       setShowForm(false);
@@ -215,6 +216,7 @@ export function DataGudang({ data, refreshData, isLoading }) {
       await fetch(`${API_URL}/stok/${id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ delta, pergerakan, pengambil }) });
       refreshData();
       setUpdateTarget(null);
+      showNotification("Stok bahan baku berhasil diperbarui!");
     } catch (error) { console.error("Gagal update stok", error); }
   }
 
@@ -224,6 +226,7 @@ export function DataGudang({ data, refreshData, isLoading }) {
       refreshData();
       setDeleteTarget(null);
       if (paginated.length === 1 && page > 1) setPage((p) => p - 1);
+      showNotification("Data bahan baku berhasil dihapus!");
     } catch (error) { console.error("Gagal menghapus barang", error); }
   }
 
@@ -233,7 +236,7 @@ export function DataGudang({ data, refreshData, isLoading }) {
         <div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#111827" }}>Data Bahan Baku</h1>
         </div>
-        <button onClick={() => { setEditTarget(null); setShowForm(true); }} className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg w-full sm:w-auto transition-colors" style={{ backgroundColor: "#0d7a6b", color: "#fff", border: "none", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600 }}>
+        <button onClick={() => { setEditTarget(null); setShowForm(true); }} className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg w-full sm:w-auto transition-colors shadow-sm outline-none" style={{ backgroundColor: "#0d7a6b", color: "#fff", border: "none", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600 }}>
           <Plus size={16} /> Tambah Bahan Baku
         </button>
       </div>
