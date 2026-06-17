@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, ChevronRight, ChevronLeft, FileSpreadsheet, X, Calendar } from "lucide-react";
 import * as XLSX from "xlsx";
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
 
 // MENERIMA PROPS DARI App.jsx
 export function Riwayat({ historyGudang, historySepatu, isLoading, showNotification }) {

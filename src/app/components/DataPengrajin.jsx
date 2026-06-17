@@ -7,6 +7,7 @@ export function DataPengrajin({ dataPengrajin, refreshData, isLoading, showNotif
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [formNama, setFormNama] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const API_URL = "https://kotama-backend.vercel.app/api/pengrajin";
 
@@ -17,6 +18,9 @@ export function DataPengrajin({ dataPengrajin, refreshData, isLoading, showNotif
 
   const handleAdd = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; // Mencegah klik ganda
+    
+    setIsSubmitting(true);
     try {
       const res = await fetch(API_URL, {
         method: "POST",
@@ -30,10 +34,15 @@ export function DataPengrajin({ dataPengrajin, refreshData, isLoading, showNotif
       showNotification("Pengrajin baru berhasil ditambahkan!");
     } catch (error) {
       alert(error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
+    if (isSubmitting) return; // Mencegah klik ganda
+
+    setIsSubmitting(true);
     try {
       await fetch(`${API_URL}/${selectedWorker.id}`, { method: "DELETE" });
       refreshData();
@@ -42,6 +51,8 @@ export function DataPengrajin({ dataPengrajin, refreshData, isLoading, showNotif
       showNotification("Data pengrajin berhasil dihapus!");
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -131,9 +142,10 @@ export function DataPengrajin({ dataPengrajin, refreshData, isLoading, showNotif
             </table>
           </div>
         </div>
+        <p className="text-center" style={{ fontSize: "0.8rem", color: "#9ca3af" }}>© USU Agile 2026</p>
       </div>
 
-      {/* MODAL MODAL FORM TAMBAH PEKERJA */}
+      {/* MODAL FORM TAMBAH PEKERJA */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm animate-in zoom-in-95 duration-200">
@@ -144,6 +156,7 @@ export function DataPengrajin({ dataPengrajin, refreshData, isLoading, showNotif
                 <input
                   type="text"
                   required
+                  disabled={isSubmitting}
                   value={formNama}
                   onChange={(e) => setFormNama(e.target.value)}
                   placeholder="Contoh: Budi Santoso"
@@ -153,17 +166,20 @@ export function DataPengrajin({ dataPengrajin, refreshData, isLoading, showNotif
               <div className="flex items-center justify-end gap-2 mt-2">
                 <button
                   type="button"
+                  disabled={isSubmitting}
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer border-none"
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none transition-colors disabled:opacity-50"
+                  style={{ cursor: isSubmitting ? "not-allowed" : "pointer" }}
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-white cursor-pointer border-none"
-                  style={{ backgroundColor: "#0d7a6b" }}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-white border-none transition-colors disabled:opacity-50"
+                  style={{ cursor: isSubmitting ? "not-allowed" : "pointer", backgroundColor: isSubmitting ? "#9ca3af" : "#0d7a6b" }}
                 >
-                  Simpan Data
+                  {isSubmitting ? "Menyimpan..." : "Simpan Data"}
                 </button>
               </div>
             </form>
@@ -185,17 +201,21 @@ export function DataPengrajin({ dataPengrajin, refreshData, isLoading, showNotif
             <div className="flex items-center justify-center gap-2">
               <button
                 type="button"
+                disabled={isSubmitting}
                 onClick={() => setIsDeleteModalOpen(false)}
-                className="px-4 py-2 flex-1 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none cursor-pointer"
+                className="px-4 py-2 flex-1 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none transition-colors disabled:opacity-50"
+                style={{ cursor: isSubmitting ? "not-allowed" : "pointer" }}
               >
                 Batal
               </button>
               <button
                 type="button"
+                disabled={isSubmitting}
                 onClick={handleDelete}
-                className="px-4 py-2 flex-1 rounded-lg text-sm font-medium text-white bg-red-500 border-none cursor-pointer"
+                className="px-4 py-2 flex-1 rounded-lg text-sm font-medium text-white bg-red-500 border-none transition-colors disabled:opacity-50"
+                style={{ cursor: isSubmitting ? "not-allowed" : "pointer", backgroundColor: isSubmitting ? "#9ca3af" : "#ef4444" }}
               >
-                Ya, Hapus
+                {isSubmitting ? "Menghapus..." : "Ya, Hapus"}
               </button>
             </div>
           </div>

@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Search, Plus, Pencil, Trash2, ArrowUpRight, ArrowDownLeft, X } from "lucide-react";
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 15;
 const API_URL = "https://kotama-backend.vercel.app/api/barang-jadi";
 
 // MENERIMA PROPS DARI App.jsx
 export function DataBarangJadi({ items, refreshData, isLoading, showNotification }) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false); // ANTI-SPAM GLOBAL UNTUK BARANG JADI
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isUpdateStockModalOpen, setIsUpdateStockModalOpen] = useState(false);
@@ -46,12 +47,15 @@ export function DataBarangJadi({ items, refreshData, isLoading, showNotification
 
   const handleAddBarang = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; // Mencegah klik ganda
+    setIsSubmitting(true);
     try {
       await fetch(API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kode_barang: formKode, nama: formNama, ukuran: parseInt(formUkuran), stok: parseInt(formStok) }) });
       refreshData();
       setIsAddModalOpen(false); resetForm();
       showNotification("Sepatu baru berhasil ditambahkan!");
     } catch (error) { console.error("Gagal menambah sepatu:", error); }
+    finally { setIsSubmitting(false); }
   };
 
   const openEditModal = (item) => {
@@ -60,12 +64,15 @@ export function DataBarangJadi({ items, refreshData, isLoading, showNotification
 
   const handleEditBarang = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; // Mencegah klik ganda
+    setIsSubmitting(true);
     try {
       await fetch(`${API_URL}/${selectedItem.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kode_barang: formKode, nama: formNama, ukuran: parseInt(formUkuran), stok: parseInt(formStok) }) });
       refreshData();
       setIsEditModalOpen(false); resetForm();
       showNotification("Data sepatu berhasil diperbarui!");
     } catch (error) { console.error("Gagal mengedit sepatu:", error); }
+    finally { setIsSubmitting(false); }
   };
 
   const openUpdateStockModal = (item) => {
@@ -74,20 +81,26 @@ export function DataBarangJadi({ items, refreshData, isLoading, showNotification
 
   const handleUpdateStock = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; // Mencegah klik ganda
+    
     const delta = parseInt(stockDelta);
     if (stockType === "keluar" && delta > selectedItem.stok) {
       setStockError("Gagal: Jumlah keluar melebihi kapasitas stok saat ini!"); return;
     }
 
+    setIsSubmitting(true);
     try {
       await fetch(`${API_URL}/stok/${selectedItem.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ delta, pergerakan: stockType }) });
       refreshData();
       setIsUpdateStockModalOpen(false);
       showNotification("Stok sepatu berhasil diperbarui!");
     } catch (error) { console.error("Gagal update stok sepatu:", error); }
+    finally { setIsSubmitting(false); }
   };
 
   const handleDeleteBarang = async () => {
+    if (isSubmitting) return; // Mencegah klik ganda
+    setIsSubmitting(true);
     try {
       await fetch(`${API_URL}/${selectedItem.id}`, { method: "DELETE" });
       refreshData();
@@ -95,6 +108,7 @@ export function DataBarangJadi({ items, refreshData, isLoading, showNotification
       if (paginatedItems.length === 1 && page > 1) setPage(page - 1);
       showNotification("Data sepatu berhasil dihapus!");
     } catch (error) { console.error("Gagal menghapus sepatu:", error); }
+    finally { setIsSubmitting(false); }
   };
 
   const resetForm = () => { setFormKode(""); setFormNama(""); setFormUkuran(""); setFormStok(""); setSelectedItem(null); setStockError(""); };
@@ -179,15 +193,15 @@ export function DataBarangJadi({ items, refreshData, isLoading, showNotification
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md animate-in zoom-in-95 duration-200">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Tambah Barang Baru</h3>
             <form onSubmit={handleAddBarang} className="flex flex-col gap-4">
-              <div><label className="text-xs font-semibold text-gray-600 block mb-1">Kode Barang</label><input type="text" required value={formKode} onChange={(e) => setFormKode(e.target.value)} placeholder="Contoh: SPT-01" className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
-              <div><label className="text-xs font-semibold text-gray-600 block mb-1">Nama Barang</label><input type="text" required value={formNama} onChange={(e) => setFormNama(e.target.value)} className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
+              <div><label className="text-xs font-semibold text-gray-600 block mb-1">Kode Barang</label><input type="text" required value={formKode} onChange={(e) => setFormKode(e.target.value)} disabled={isSubmitting} placeholder="Contoh: SPT-01" className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
+              <div><label className="text-xs font-semibold text-gray-600 block mb-1">Nama Barang</label><input type="text" required value={formNama} onChange={(e) => setFormNama(e.target.value)} disabled={isSubmitting} className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs font-semibold text-gray-600 block mb-1">Ukuran (Size)</label><input type="number" required value={formUkuran} onChange={(e) => setFormUkuran(e.target.value)} className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
-                <div><label className="text-xs font-semibold text-gray-600 block mb-1">Jumlah Stok Awal</label><input type="number" required min="0" value={formStok} onChange={(e) => setFormStok(e.target.value)} className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
+                <div><label className="text-xs font-semibold text-gray-600 block mb-1">Ukuran (Size)</label><input type="number" required value={formUkuran} onChange={(e) => setFormUkuran(e.target.value)} disabled={isSubmitting} className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
+                <div><label className="text-xs font-semibold text-gray-600 block mb-1">Jumlah Stok Awal</label><input type="number" required min="0" value={formStok} onChange={(e) => setFormStok(e.target.value)} disabled={isSubmitting} className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
               </div>
               <div className="flex items-center justify-end gap-2 mt-2">
-                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer border-none">Batal</button>
-                <button type="submit" className="px-4 py-2 rounded-lg text-sm font-medium text-white cursor-pointer border-none" style={{ backgroundColor: "#0d7a6b" }}>Simpan Barang</button>
+                <button type="button" onClick={() => setIsAddModalOpen(false)} disabled={isSubmitting} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none disabled:opacity-50" style={{ cursor: isSubmitting ? "not-allowed" : "pointer" }}>Batal</button>
+                <button type="submit" disabled={isSubmitting} className="px-4 py-2 rounded-lg text-sm font-medium text-white border-none disabled:opacity-50" style={{ backgroundColor: isSubmitting ? "#9ca3af" : "#0d7a6b", cursor: isSubmitting ? "not-allowed" : "pointer" }}>{isSubmitting ? "Menyimpan..." : "Simpan Barang"}</button>
               </div>
             </form>
           </div>
@@ -199,15 +213,15 @@ export function DataBarangJadi({ items, refreshData, isLoading, showNotification
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md animate-in zoom-in-95 duration-200">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Edit Informasi Barang</h3>
             <form onSubmit={handleEditBarang} className="flex flex-col gap-4">
-              <div><label className="text-xs font-semibold text-gray-600 block mb-1">Kode Barang</label><input type="text" required value={formKode} onChange={(e) => setFormKode(e.target.value)} className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
-              <div><label className="text-xs font-semibold text-gray-600 block mb-1">Nama Barang</label><input type="text" required value={formNama} onChange={(e) => setFormNama(e.target.value)} className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
+              <div><label className="text-xs font-semibold text-gray-600 block mb-1">Kode Barang</label><input type="text" required value={formKode} onChange={(e) => setFormKode(e.target.value)} disabled={isSubmitting} className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
+              <div><label className="text-xs font-semibold text-gray-600 block mb-1">Nama Barang</label><input type="text" required value={formNama} onChange={(e) => setFormNama(e.target.value)} disabled={isSubmitting} className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs font-semibold text-gray-600 block mb-1">Ukuran (Size)</label><input type="number" required value={formUkuran} onChange={(e) => setFormUkuran(e.target.value)} className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
-                <div><label className="text-xs font-semibold text-gray-600 block mb-1">Stok saat ini</label><input type="number" required min="0" value={formStok} onChange={(e) => setFormStok(e.target.value)} className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
+                <div><label className="text-xs font-semibold text-gray-600 block mb-1">Ukuran (Size)</label><input type="number" required value={formUkuran} onChange={(e) => setFormUkuran(e.target.value)} disabled={isSubmitting} className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
+                <div><label className="text-xs font-semibold text-gray-600 block mb-1">Stok saat ini</label><input type="number" required min="0" value={formStok} onChange={(e) => setFormStok(e.target.value)} disabled={isSubmitting} className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" /></div>
               </div>
               <div className="flex items-center justify-end gap-2 mt-2">
-                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer border-none">Batal</button>
-                <button type="submit" className="px-4 py-2 rounded-lg text-sm font-medium text-white cursor-pointer border-none" style={{ backgroundColor: "#0d7a6b" }}>Simpan Perubahan</button>
+                <button type="button" onClick={() => setIsEditModalOpen(false)} disabled={isSubmitting} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none disabled:opacity-50" style={{ cursor: isSubmitting ? "not-allowed" : "pointer" }}>Batal</button>
+                <button type="submit" disabled={isSubmitting} className="px-4 py-2 rounded-lg text-sm font-medium text-white border-none disabled:opacity-50" style={{ backgroundColor: isSubmitting ? "#9ca3af" : "#0d7a6b", cursor: isSubmitting ? "not-allowed" : "pointer" }}>{isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}</button>
               </div>
             </form>
           </div>
@@ -225,19 +239,19 @@ export function DataBarangJadi({ items, refreshData, isLoading, showNotification
               <div>
                 <label className="text-xs font-semibold text-gray-600 block mb-1.5">Jenis Transaksi</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => { setStockType("masuk"); setStockError(""); }} className="flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-sm transition-colors border cursor-pointer outline-none" style={{ backgroundColor: stockType === "masuk" ? "#e8f5f2" : "#fff", color: stockType === "masuk" ? "#0d7a6b" : "#4b5563", borderColor: stockType === "masuk" ? "#0d7a6b" : "#e5e7eb" }}><ArrowUpRight size={16} /> Stok Masuk</button>
-                  <button type="button" onClick={() => { setStockType("keluar"); setStockError(""); }} className="flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-sm transition-colors border cursor-pointer outline-none" style={{ backgroundColor: stockType === "keluar" ? "#fee2e2" : "#fff", color: stockType === "keluar" ? "#ef4444" : "#4b5563", borderColor: stockType === "keluar" ? "#ef4444" : "#e5e7eb" }}><ArrowDownLeft size={16} /> Stok Keluar</button>
+                  <button type="button" disabled={isSubmitting} onClick={() => { setStockType("masuk"); setStockError(""); }} className="flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-sm outline-none disabled:opacity-50" style={{ cursor: isSubmitting ? "not-allowed" : "pointer", backgroundColor: stockType === "masuk" ? "#e8f5f2" : "#fff", color: stockType === "masuk" ? "#0d7a6b" : "#4b5563", border: `1px solid ${stockType === "masuk" ? "#0d7a6b" : "#e5e7eb"}` }}><ArrowUpRight size={16} /> Stok Masuk</button>
+                  <button type="button" disabled={isSubmitting} onClick={() => { setStockType("keluar"); setStockError(""); }} className="flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-sm outline-none disabled:opacity-50" style={{ cursor: isSubmitting ? "not-allowed" : "pointer", backgroundColor: stockType === "keluar" ? "#fee2e2" : "#fff", color: stockType === "keluar" ? "#ef4444" : "#4b5563", border: `1px solid ${stockType === "keluar" ? "#ef4444" : "#e5e7eb"}` }}><ArrowDownLeft size={16} /> Stok Keluar</button>
                 </div>
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-600 block mb-1">Jumlah Barang</label>
-                <input type="number" required min="1" value={stockDelta} onChange={(e) => { setStockDelta(e.target.value); setStockError(""); }} placeholder="Masukkan kuantitas jumlah..." className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" />
+                <input type="number" required min="1" value={stockDelta} onChange={(e) => { setStockDelta(e.target.value); setStockError(""); }} disabled={isSubmitting} placeholder="Masukkan kuantitas jumlah..." className="w-full rounded-lg px-3 py-2 border border-gray-200 outline-none text-sm focus:border-[#0d7a6b]" />
                 {stockError && <p className="text-xs text-red-500 mt-1 font-medium">{stockError}</p>}
                 <p className="text-[11px] text-gray-400 mt-1">Stok saat ini: <span className="font-bold">{selectedItem.stok}</span></p>
               </div>
               <div className="flex items-center justify-end gap-2 mt-4">
-                <button type="button" onClick={() => setIsUpdateStockModalOpen(false)} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors border-none cursor-pointer">Batal</button>
-                <button type="submit" className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors border-none cursor-pointer" style={{ backgroundColor: stockType === "masuk" ? "#0d7a6b" : "#ef4444" }}>{stockType === "masuk" ? "Konfirmasi Masuk" : "Konfirmasi Keluar"}</button>
+                <button type="button" onClick={() => setIsUpdateStockModalOpen(false)} disabled={isSubmitting} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none disabled:opacity-50" style={{ cursor: isSubmitting ? "not-allowed" : "pointer" }}>Batal</button>
+                <button type="submit" disabled={isSubmitting} className="px-4 py-2 rounded-lg text-sm font-medium text-white border-none disabled:opacity-50" style={{ cursor: isSubmitting ? "not-allowed" : "pointer", backgroundColor: isSubmitting ? "#9ca3af" : (stockType === "masuk" ? "#0d7a6b" : "#ef4444") }}>{isSubmitting ? "Memproses..." : (stockType === "masuk" ? "Konfirmasi Masuk" : "Konfirmasi Keluar")}</button>
               </div>
             </form>
           </div>
@@ -251,8 +265,8 @@ export function DataBarangJadi({ items, refreshData, isLoading, showNotification
             <h3 className="text-base font-bold text-gray-900 mb-1">Hapus Barang Jadi?</h3>
             <p className="text-xs text-gray-500 px-2 mb-5">Yakin ingin menghapus <span className="font-semibold text-gray-800">"{selectedItem.nama}"</span>?</p>
             <div className="flex items-center justify-center gap-2">
-              <button type="button" onClick={() => setIsDeleteModalOpen(false)} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none cursor-pointer hover:bg-gray-200 transition-colors">Batal</button>
-              <button type="button" onClick={handleDeleteBarang} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium text-white bg-red-500 border-none cursor-pointer hover:bg-red-700 transition-colors">Ya, Hapus</button>
+              <button type="button" onClick={() => setIsDeleteModalOpen(false)} disabled={isSubmitting} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none disabled:opacity-50" style={{ cursor: isSubmitting ? "not-allowed" : "pointer" }}>Batal</button>
+              <button type="button" onClick={handleDeleteBarang} disabled={isSubmitting} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium text-white border-none disabled:opacity-50" style={{ cursor: isSubmitting ? "not-allowed" : "pointer", backgroundColor: isSubmitting ? "#9ca3af" : "#ef4444" }}>{isSubmitting ? "Menghapus..." : "Ya, Hapus"}</button>
             </div>
           </div>
         </div>
