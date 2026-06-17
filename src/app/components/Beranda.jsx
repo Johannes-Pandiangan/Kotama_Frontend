@@ -2,7 +2,7 @@ import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { AlertTriangle, ChevronDown, Search, Calendar } from "lucide-react";
 
-const ITEMS_PER_PAGE = 3;
+const ITEMS_PER_PAGE = 10;
 
 // MENERIMA PROPS DARI App.jsx
 export function Beranda({ dataGudang, dataBarangJadi, dataRiwayat, isLoading }) {

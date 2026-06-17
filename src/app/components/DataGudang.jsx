@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Search, Plus, Pencil, Trash2, X, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 
-const ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 15;
 const API_URL = "https://kotama-backend.vercel.app/api/gudang";
 
 const statusStyle = {
@@ -16,11 +16,16 @@ function FormBarang({ initial, onSave, onCancel }) {
   const [type, setType] = useState(initial?.type ?? "");
   const [stok, setStok] = useState(initial?.stok?.toString() ?? "");
   const [satuan, setSatuan] = useState(initial?.satuan ?? "pasang");
+  const [isLoading, setIsLoading] = useState(false); // ANTI-SPAM
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
+    if (isLoading) return; // Mencegah klik ganda
     if (!nama.trim() || !type.trim() || stok === "") return;
-    onSave({ nama: nama.trim(), kategori, type: type.trim(), stok: parseInt(stok) || 0, satuan });
+    
+    setIsLoading(true);
+    await onSave({ nama: nama.trim(), kategori, type: type.trim(), stok: parseInt(stok) || 0, satuan });
+    setIsLoading(false);
   }
 
   const inputStyle = { width: "100%", border: "1px solid #d1d5db", borderRadius: 8, padding: "10px 12px", fontSize: "0.9rem", color: "#111827", outline: "none", backgroundColor: "#fff", boxSizing: "border-box" };
@@ -30,17 +35,17 @@ function FormBarang({ initial, onSave, onCancel }) {
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: "rgba(0,0,0,0.35)" }}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between px-6 pt-5 pb-4" style={{ borderBottom: "1px solid #f3f4f6" }}>
-          <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "#111827" }}>{initial ? "Edit Barang" : "Tambah Bahan Baku Baru"}</h2>
-          <button onClick={onCancel} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}><X size={20} /></button>
+          <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "#111827" }}>{initial ? "Edit Barang" : "Tambah Barang"}</h2>
+          <button onClick={onCancel} disabled={isLoading} style={{ background: "none", border: "none", cursor: isLoading ? "not-allowed" : "pointer", color: "#9ca3af" }}><X size={20} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-4">
-          <div><label style={labelStyle}>Nama Barang</label><input type="text" value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Masukkan nama barang" style={inputStyle} required /></div>
+          <div><label style={labelStyle}>Nama Barang</label><input type="text" value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Masukkan nama barang" style={inputStyle} required disabled={isLoading} /></div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label style={labelStyle}>Kategori</label>
               <div className="relative">
-                <select value={kategori} onChange={(e) => setKategori(e.target.value)} style={{ ...inputStyle, appearance: "none", paddingRight: 36, cursor: "pointer" }}>
+                <select value={kategori} onChange={(e) => setKategori(e.target.value)} disabled={isLoading} style={{ ...inputStyle, appearance: "none", paddingRight: 36, cursor: isLoading ? "not-allowed" : "pointer" }}>
                   <option value="Tapak">Tapak</option>
                   <option value="Kulit">Kulit</option>
                   <option value="Lapis">Lapis</option>
@@ -49,14 +54,14 @@ function FormBarang({ initial, onSave, onCancel }) {
                 <ChevronRight size={15} className="absolute right-3 top-1/2 pointer-events-none text-gray-400 transform -translate-y-1/2 rotate-90" />
               </div>
             </div>
-            <div><label style={labelStyle}>Type Barang</label><input type="text" value={type} onChange={(e) => setType(e.target.value)} placeholder="Ukuran/Warna" style={inputStyle} required /></div>
+            <div><label style={labelStyle}>Type Barang</label><input type="text" value={type} onChange={(e) => setType(e.target.value)} placeholder="Ukuran/Warna" style={inputStyle} required disabled={isLoading} /></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label style={labelStyle}>Jumlah Stock</label><input type="number" value={stok} onChange={(e) => setStok(e.target.value)} placeholder="0" min={0} style={inputStyle} required /></div>
+            <div><label style={labelStyle}>Jumlah Stock</label><input type="number" value={stok} onChange={(e) => setStok(e.target.value)} placeholder="0" min={0} style={inputStyle} required disabled={isLoading} /></div>
             <div>
               <label style={labelStyle}>Satuan</label>
               <div className="relative">
-                <select value={satuan} onChange={(e) => setSatuan(e.target.value)} style={{ ...inputStyle, appearance: "none", paddingRight: 36, cursor: "pointer" }}>
+                <select value={satuan} onChange={(e) => setSatuan(e.target.value)} disabled={isLoading} style={{ ...inputStyle, appearance: "none", paddingRight: 36, cursor: isLoading ? "not-allowed" : "pointer" }}>
                   <option value="pasang">Pasang</option>
                   <option value="kaki">Kaki</option>
                   <option value="lembar">Lembar</option>
@@ -69,8 +74,8 @@ function FormBarang({ initial, onSave, onCancel }) {
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-2">
-            <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 cursor-pointer border-none hover:bg-gray-200">Batal</button>
-            <button type="submit" className="px-5 py-2 rounded-lg text-white text-sm font-semibold cursor-pointer border-none" style={{ backgroundColor: "#0d7a6b" }}>Simpan</button>
+            <button type="button" onClick={onCancel} disabled={isLoading} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 cursor-pointer border-none hover:bg-gray-200 transition-colors disabled:opacity-50">Batal</button>
+            <button type="submit" disabled={isLoading} className="px-5 py-2 rounded-lg text-white text-sm font-semibold cursor-pointer border-none transition-colors disabled:opacity-50" style={{ backgroundColor: isLoading ? "#9ca3af" : "#0d7a6b" }}>{isLoading ? "Menyimpan..." : "Simpan"}</button>
           </div>
         </form>
       </div>
@@ -83,9 +88,12 @@ function UpdateStok({ barang, dataPengrajin, onSave, onCancel }) {
   const [jumlah, setJumlah] = useState("");
   const [pengambil, setPengambil] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // ANTI-SPAM
 
-  function handleSave(e) {
+  async function handleSave(e) {
     e.preventDefault();
+    if (isLoading) return; // Mencegah klik ganda
+
     const val = parseInt(jumlah);
     if (!val || val <= 0) return;
 
@@ -99,15 +107,17 @@ function UpdateStok({ barang, dataPengrajin, onSave, onCancel }) {
     }
 
     setErrorMsg("");
-    onSave(barang.id, val, pergerakan, pengambil);
+    setIsLoading(true); // Nyalakan efek loading
+    await onSave(barang.id, val, pergerakan, pengambil);
+    setIsLoading(false); // Matikan efek loading jika gagal (jika sukses modal otomatis tertutup)
   }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: "rgba(0,0,0,0.35)" }}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between px-6 pt-5 pb-4" style={{ borderBottom: "1px solid #f3f4f6" }}>
-          <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "#111827" }}>Update Stok Bahan Baku</h2>
-          <button onClick={onCancel} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}><X size={20} /></button>
+          <h2 style={{ fontSize: "1.125rem", fontWeight: 700, color: "#111827" }}>Update Stok Material</h2>
+          <button onClick={onCancel} disabled={isLoading} style={{ background: "none", border: "none", cursor: isLoading ? "not-allowed" : "pointer", color: "#9ca3af" }}><X size={20} /></button>
         </div>
 
         <form onSubmit={handleSave} className="px-6 py-5 flex flex-col gap-4">
@@ -120,15 +130,15 @@ function UpdateStok({ barang, dataPengrajin, onSave, onCancel }) {
           <div>
             <label style={{ fontSize: "0.65rem", fontWeight: 600, color: "#6b7280", letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Jenis Transaksi</label>
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => { setPergerakan("masuk"); setErrorMsg(""); }} className="flex items-center justify-center gap-2 py-2.5 rounded-lg transition-colors cursor-pointer outline-none font-semibold text-sm" style={{ border: `1px solid ${pergerakan === "masuk" ? "#0d7a6b" : "#e5e7eb"}`, backgroundColor: pergerakan === "masuk" ? "#e8f5f2" : "#fff", color: pergerakan === "masuk" ? "#0d7a6b" : "#6b7280" }}><ArrowUpRight size={16} /> Stok Masuk</button>
-              <button type="button" onClick={() => { setPergerakan("keluar"); setErrorMsg(""); }} className="flex items-center justify-center gap-2 py-2.5 rounded-lg transition-colors cursor-pointer outline-none font-semibold text-sm" style={{ border: `1px solid ${pergerakan === "keluar" ? "#ef4444" : "#e5e7eb"}`, backgroundColor: pergerakan === "keluar" ? "#fee2e2" : "#fff", color: pergerakan === "keluar" ? "#ef4444" : "#6b7280" }}><ArrowDownLeft size={16} /> Stok Keluar</button>
+              <button type="button" disabled={isLoading} onClick={() => { setPergerakan("masuk"); setErrorMsg(""); }} className="flex items-center justify-center gap-2 py-2.5 rounded-lg transition-colors outline-none font-semibold text-sm disabled:opacity-50" style={{ cursor: isLoading ? "not-allowed" : "pointer", border: `1px solid ${pergerakan === "masuk" ? "#0d7a6b" : "#e5e7eb"}`, backgroundColor: pergerakan === "masuk" ? "#e8f5f2" : "#fff", color: pergerakan === "masuk" ? "#0d7a6b" : "#6b7280" }}><ArrowUpRight size={16} /> Stok Masuk</button>
+              <button type="button" disabled={isLoading} onClick={() => { setPergerakan("keluar"); setErrorMsg(""); }} className="flex items-center justify-center gap-2 py-2.5 rounded-lg transition-colors outline-none font-semibold text-sm disabled:opacity-50" style={{ cursor: isLoading ? "not-allowed" : "pointer", border: `1px solid ${pergerakan === "keluar" ? "#ef4444" : "#e5e7eb"}`, backgroundColor: pergerakan === "keluar" ? "#fee2e2" : "#fff", color: pergerakan === "keluar" ? "#ef4444" : "#6b7280" }}><ArrowDownLeft size={16} /> Stok Keluar</button>
             </div>
           </div>
 
           {pergerakan === "keluar" && (
             <div>
               <label style={{ fontSize: "0.65rem", fontWeight: 600, color: "#6b7280", letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Nama Pengambil</label>
-              <select value={pengambil} onChange={(e) => { setPengambil(e.target.value); setErrorMsg(""); }} style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: 8, padding: "10px 12px", fontSize: "0.9rem", color: "#111827", outline: "none", backgroundColor: "#fff" }}>
+              <select value={pengambil} disabled={isLoading} onChange={(e) => { setPengambil(e.target.value); setErrorMsg(""); }} style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: 8, padding: "10px 12px", fontSize: "0.9rem", color: "#111827", outline: "none", backgroundColor: "#fff", cursor: isLoading ? "not-allowed" : "pointer" }}>
                 <option value="">-- Pilih Nama Pekerja --</option>
                 {dataPengrajin && dataPengrajin.map((p) => <option key={p.id} value={p.nama}>{p.nama}</option>)}
               </select>
@@ -137,14 +147,14 @@ function UpdateStok({ barang, dataPengrajin, onSave, onCancel }) {
 
           <div>
             <label style={{ fontSize: "0.65rem", fontWeight: 600, color: "#6b7280", letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Jumlah Barang</label>
-            <input type="number" value={jumlah} onChange={(e) => { setJumlah(e.target.value); setErrorMsg(""); }} placeholder="Masukkan kuantitas..." min={1} required style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: 8, padding: "10px 12px", fontSize: "0.9rem", color: "#111827", outline: "none", backgroundColor: "#fff", boxSizing: "border-box" }} />
+            <input type="number" value={jumlah} disabled={isLoading} onChange={(e) => { setJumlah(e.target.value); setErrorMsg(""); }} placeholder="Masukkan kuantitas..." min={1} required style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: 8, padding: "10px 12px", fontSize: "0.9rem", color: "#111827", outline: "none", backgroundColor: "#fff", boxSizing: "border-box" }} />
             {errorMsg && <p className="text-xs text-red-500 mt-1 font-medium">{errorMsg}</p>}
             <p className="text-[11px] text-gray-400 mt-1">Stok saat ini: <span className="font-bold">{barang.stok} {barang.satuan}</span></p>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-2">
-            <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 cursor-pointer border-none hover:bg-gray-200 transition-colors">Batal</button>
-            <button type="submit" className="px-5 py-2 rounded-lg text-white text-sm font-semibold cursor-pointer border-none transition-colors" style={{ backgroundColor: pergerakan === "masuk" ? "#0d7a6b" : "#ef4444" }}>{pergerakan === "masuk" ? "Konfirmasi Masuk" : "Konfirmasi Keluar"}</button>
+            <button type="button" onClick={onCancel} disabled={isLoading} className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none transition-colors disabled:opacity-50" style={{ cursor: isLoading ? "not-allowed" : "pointer" }}>Batal</button>
+            <button type="submit" disabled={isLoading} className="px-5 py-2 rounded-lg text-white text-sm font-semibold border-none transition-colors disabled:opacity-50" style={{ cursor: isLoading ? "not-allowed" : "pointer", backgroundColor: isLoading ? "#9ca3af" : (pergerakan === "masuk" ? "#0d7a6b" : "#ef4444") }}>{isLoading ? "Memproses..." : (pergerakan === "masuk" ? "Konfirmasi Masuk" : "Konfirmasi Keluar")}</button>
           </div>
         </form>
       </div>
@@ -153,15 +163,24 @@ function UpdateStok({ barang, dataPengrajin, onSave, onCancel }) {
 }
 
 function ConfirmDelete({ nama, onConfirm, onCancel }) {
+  const [isLoading, setIsLoading] = useState(false); // ANTI-SPAM
+
+  async function handleConfirm() {
+    if (isLoading) return;
+    setIsLoading(true);
+    await onConfirm();
+    setIsLoading(false);
+  }
+
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: "rgba(0,0,0,0.35)" }}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-center w-12 h-12 rounded-full mx-auto mb-3" style={{ backgroundColor: "#fee2e2" }}><Trash2 size={24} style={{ color: "#ef4444" }} /></div>
-        <h3 className="text-base font-bold text-gray-900 mb-1">Hapus Bahan Baku?</h3>
+        <h3 className="text-base font-bold text-gray-900 mb-1">Hapus Barang?</h3>
         <p className="text-xs text-gray-500 px-2 mb-5">Apakah Anda yakin ingin menghapus <span className="font-semibold text-gray-800">"{nama}"</span>?</p>
         <div className="flex items-center justify-center gap-2">
-          <button onClick={onCancel} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none cursor-pointer hover:bg-gray-200 transition-colors">Batal</button>
-          <button onClick={onConfirm} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium text-white bg-red-500 border-none cursor-pointer hover:bg-red-700 transition-colors">Ya, Hapus</button>
+          <button onClick={onCancel} disabled={isLoading} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border-none transition-colors disabled:opacity-50" style={{ cursor: isLoading ? "not-allowed" : "pointer" }}>Batal</button>
+          <button onClick={handleConfirm} disabled={isLoading} className="px-4 py-2 flex-1 rounded-lg text-sm font-medium text-white border-none transition-colors disabled:opacity-50" style={{ cursor: isLoading ? "not-allowed" : "pointer", backgroundColor: isLoading ? "#9ca3af" : "#ef4444" }}>{isLoading ? "Menghapus..." : "Ya, Hapus"}</button>
         </div>
       </div>
     </div>
