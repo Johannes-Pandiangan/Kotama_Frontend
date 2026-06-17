@@ -72,6 +72,7 @@ export function Sidebar({ activePage, onNavigate, onLogout }) {
       {/* Bottom */}
       <div className="px-3 pb-5" style={{ borderTop: "1px solid #f3f4f6", paddingTop: 12 }}>
         <button
+          onClick={() => window.open("/Buku_Panduan.pdf", "_blank")}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors"
           style={{ color: "#4b5563", fontSize: "0.875rem", background: "none", border: "none", cursor: "pointer" }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f9fafb")}
