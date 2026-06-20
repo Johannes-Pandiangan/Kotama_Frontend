@@ -10,11 +10,26 @@ const statusStyle = {
   Habis: { bg: "#fee2e2", color: "#ef4444" },
 };
 
+// ==========================================
+// FUNGSI PINTAR FORMAT TAMPILAN STOK
+// ==========================================
+const formatNilaiStok = (stok, satuan) => {
+  const num = Number(stok);
+  if (satuan === "meter" || satuan === "kaki") {
+    // Memaksa 1 desimal di belakang koma (contoh: 1.56 -> 1.6)
+    return parseFloat(num.toFixed(1)); 
+  }
+  // Selain meter & kaki, hilangkan koma / jadikan bilangan bulat
+  return Math.round(num); 
+};
+
 function FormBarang({ initial, onSave, onCancel }) {
   const [nama, setNama] = useState(initial?.nama ?? "");
   const [kategori, setKategori] = useState(initial?.kategori ?? "Tapak");
   const [type, setType] = useState(initial?.type ?? "");
-  const [stok, setStok] = useState(initial?.stok?.toString() ?? "");
+  
+  // Memasukkan nilai default stok dengan format yang rapi jika sedang edit
+  const [stok, setStok] = useState(initial ? formatNilaiStok(initial.stok, initial.satuan).toString() : "");
   const [satuan, setSatuan] = useState(initial?.satuan ?? "pasang");
   const [isLoading, setIsLoading] = useState(false); // ANTI-SPAM
 
@@ -23,8 +38,12 @@ function FormBarang({ initial, onSave, onCancel }) {
     if (isLoading) return; // Mencegah klik ganda
     if (!nama.trim() || !type.trim() || stok === "") return;
     
+    // LOGIKA PENYIMPANAN DESIMAL:
+    const apakahDesimal = satuan === "meter" || satuan === "kaki";
+    const nilaiStok = apakahDesimal ? parseFloat(parseFloat(stok).toFixed(1)) : parseInt(stok, 10);
+
     setIsLoading(true);
-    await onSave({ nama: nama.trim(), kategori, type: type.trim(), stok: parseInt(stok) || 0, satuan });
+    await onSave({ nama: nama.trim(), kategori, type: type.trim(), stok: nilaiStok || 0, satuan });
     setIsLoading(false);
   }
 
@@ -57,7 +76,21 @@ function FormBarang({ initial, onSave, onCancel }) {
             <div><label style={labelStyle}>Type Barang</label><input type="text" value={type} onChange={(e) => setType(e.target.value)} placeholder="Ukuran/Warna" style={inputStyle} required disabled={isLoading} /></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label style={labelStyle}>Jumlah Stock</label><input type="number" value={stok} onChange={(e) => setStok(e.target.value)} placeholder="0" min={0} style={inputStyle} required disabled={isLoading} /></div>
+            <div>
+              <label style={labelStyle}>Jumlah Stock</label>
+              <input 
+                type="number" 
+                // STEP dinamis: 0.1 untuk desimal, 1 untuk bilangan bulat
+                step={satuan === "meter" || satuan === "kaki" ? "0.1" : "1"} 
+                value={stok} 
+                onChange={(e) => setStok(e.target.value)} 
+                placeholder="0" 
+                min={0} 
+                style={inputStyle} 
+                required 
+                disabled={isLoading} 
+              />
+            </div>
             <div>
               <label style={labelStyle}>Satuan</label>
               <div className="relative">
@@ -94,7 +127,9 @@ function UpdateStok({ barang, dataPengrajin, onSave, onCancel }) {
     e.preventDefault();
     if (isLoading) return; // Mencegah klik ganda
 
-    const val = parseInt(jumlah);
+    const apakahDesimal = barang.satuan === "meter" || barang.satuan === "kaki";
+    const val = apakahDesimal ? parseFloat(parseFloat(jumlah).toFixed(1)) : parseInt(jumlah, 10);
+
     if (!val || val <= 0) return;
 
     if (pergerakan === "keluar" && val > barang.stok) {
@@ -147,9 +182,20 @@ function UpdateStok({ barang, dataPengrajin, onSave, onCancel }) {
 
           <div>
             <label style={{ fontSize: "0.65rem", fontWeight: 600, color: "#6b7280", letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>Jumlah Barang</label>
-            <input type="number" value={jumlah} disabled={isLoading} onChange={(e) => { setJumlah(e.target.value); setErrorMsg(""); }} placeholder="Masukkan kuantitas..." min={1} required style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: 8, padding: "10px 12px", fontSize: "0.9rem", color: "#111827", outline: "none", backgroundColor: "#fff", boxSizing: "border-box" }} />
+            <input 
+              type="number" 
+              // STEP dan MIN dinamis sesuai satuan barangnya
+              step={barang.satuan === "meter" || barang.satuan === "kaki" ? "0.1" : "1"} 
+              min={barang.satuan === "meter" || barang.satuan === "kaki" ? 0.1 : 1}
+              value={jumlah} 
+              disabled={isLoading} 
+              onChange={(e) => { setJumlah(e.target.value); setErrorMsg(""); }} 
+              placeholder="Masukkan kuantitas..." 
+              required 
+              style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: 8, padding: "10px 12px", fontSize: "0.9rem", color: "#111827", outline: "none", backgroundColor: "#fff", boxSizing: "border-box" }} 
+            />
             {errorMsg && <p className="text-xs text-red-500 mt-1 font-medium">{errorMsg}</p>}
-            <p className="text-[11px] text-gray-400 mt-1">Stok saat ini: <span className="font-bold">{barang.stok} {barang.satuan}</span></p>
+            <p className="text-[11px] text-gray-400 mt-1">Stok saat ini: <span className="font-bold">{formatNilaiStok(barang.stok, barang.satuan)} {barang.satuan}</span></p>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-2">
@@ -300,7 +346,8 @@ export function DataGudang({ data, dataPengrajin, refreshData, isLoading, showNo
                       <td className="py-4 px-5 font-medium text-sm text-gray-900">{item.nama}</td>
                       <td className="py-4 px-5 text-sm text-gray-700">{item.kategori}</td>
                       <td className="py-4 px-5 text-sm text-gray-700">{item.type}</td>
-                      <td className="py-4 px-5 font-semibold text-sm text-gray-900">{item.stok} <span className="text-gray-500 font-normal">{item.satuan}</span></td>
+                      {/* PENERAPAN FUNGSI FORMAT STOK DI TABEL */}
+                      <td className="py-4 px-5 font-semibold text-sm text-gray-900">{formatNilaiStok(item.stok, item.satuan)} <span className="text-gray-500 font-normal">{item.satuan}</span></td>
                       <td className="py-4 px-5"><span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: statusStyle[item.status]?.bg || "#e5e7eb", color: statusStyle[item.status]?.color || "#374151" }}>{item.status}</span></td>
                       <td className="py-4 px-5"><button onClick={() => setUpdateTarget(item)} className="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer border-none outline-none" style={{ backgroundColor: "#0d7a6b", color: "#ffffff" }}>Update</button></td>
                       <td className="py-4 px-5">

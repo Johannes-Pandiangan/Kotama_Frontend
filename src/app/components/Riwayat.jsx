@@ -4,6 +4,13 @@ import * as XLSX from "xlsx";
 
 const ITEMS_PER_PAGE = 10;
 
+// FUNGSI PINTAR FORMAT JUMLAH RIWAYAT
+const formatJumlah = (jumlah) => {
+  const num = Number(jumlah);
+  // Otomatis menghilangkan ".0" jika bulat, dan menyisakan 1 desimal jika ada nilainya
+  return parseFloat(num.toFixed(1)); 
+};
+
 // MENERIMA PROPS DARI App.jsx
 export function Riwayat({ historyGudang, historySepatu, isLoading, showNotification }) {
   const [tipeData, setTipeData] = useState("Bahan Baku");
@@ -52,12 +59,27 @@ export function Riwayat({ historyGudang, historySepatu, isLoading, showNotificat
 
     if (tipeData === "Bahan Baku") {
       dataToExport = filteredHistory.map((item, index) => ({
-        "No": index + 1, "Nama Barang": item.nama, "Kategori": item.kategori, "Type": item.type, "Aktivitas": item.aktivitas === "masuk" ? "Stok Masuk" : "Stok Keluar", "Jumlah": item.aktivitas === "masuk" ? `+${item.jumlah}` : `-${item.jumlah}`, "Pengambil": item.pengambil || "-", "Tanggal Update": new Date(item.tanggal).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
+        "No": index + 1, 
+        "Nama Barang": item.nama, 
+        "Kategori": item.kategori, 
+        "Type": item.type, 
+        "Aktivitas": item.aktivitas === "masuk" ? "Stok Masuk" : "Stok Keluar", 
+        // TERAPKAN FORMAT DI EXCEL
+        "Jumlah": item.aktivitas === "masuk" ? `+${formatJumlah(item.jumlah)}` : `-${formatJumlah(item.jumlah)}`, 
+        "Pengambil": item.pengambil || "-", 
+        "Tanggal Update": new Date(item.tanggal).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
       }));
       wscols = [{ wch: 5 }, { wch: 25 }, { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 10 }, { wch: 20 }, { wch: 25 }];
     } else {
       dataToExport = filteredHistory.map((item, index) => ({
-        "No": index + 1, "Kode Barang": item.kode_barang || "-", "Nama Barang": item.nama, "Ukuran": item.ukuran, "Aktivitas": item.aktivitas === "masuk" ? "Stok Masuk" : "Stok Keluar", "Jumlah": item.aktivitas === "masuk" ? `+${item.jumlah}` : `-${item.jumlah}`, "Tanggal Update": new Date(item.tanggal).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
+        "No": index + 1, 
+        "Kode Barang": item.kode_barang || "-", 
+        "Nama Barang": item.nama, 
+        "Ukuran": item.ukuran, 
+        "Aktivitas": item.aktivitas === "masuk" ? "Stok Masuk" : "Stok Keluar", 
+        // TERAPKAN FORMAT DI EXCEL
+        "Jumlah": item.aktivitas === "masuk" ? `+${formatJumlah(item.jumlah)}` : `-${formatJumlah(item.jumlah)}`, 
+        "Tanggal Update": new Date(item.tanggal).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
       }));
       wscols = [{ wch: 5 }, { wch: 15 }, { wch: 25 }, { wch: 10 }, { wch: 15 }, { wch: 10 }, { wch: 25 }];
     }
@@ -68,7 +90,6 @@ export function Riwayat({ historyGudang, historySepatu, isLoading, showNotificat
     XLSX.utils.book_append_sheet(workbook, worksheet, `Riwayat_${tipeData}`);
     XLSX.writeFile(workbook, `Laporan_Riwayat_${tipeData.replace(" ", "_")}.xlsx`);
     
-    // Tutup Modal & Panggil Toast
     setIsConfirmExportOpen(false);
     showNotification(`Laporan ${tipeData} berhasil diunduh dalam format Excel!`);
   };
@@ -184,7 +205,8 @@ export function Riwayat({ historyGudang, historySepatu, isLoading, showNotificat
                           <td className="py-4 px-5" style={{ fontSize: "0.875rem", color: "#374151" }}>{item.kategori}</td>
                           <td className="py-4 px-5 text-center" style={{ fontSize: "0.875rem", color: "#374151" }}>{item.type}</td>
                           <td className="py-4 px-5 text-center"><span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold capitalize" style={{ backgroundColor: isMasuk ? "#e8f5f2" : "#fee2e2", color: isMasuk ? "#0d7a6b" : "#ef4444" }}>{item.aktivitas}</span></td>
-                          <td className="py-4 px-5 text-center font-bold" style={{ fontSize: "0.875rem", color: isMasuk ? "#0d7a6b" : "#ef4444" }}>{isMasuk ? `+${item.jumlah}` : `-${item.jumlah}`}</td>
+                          {/* PENERAPAN FORMAT DI TABEL RIWAYAT */}
+                          <td className="py-4 px-5 text-center font-bold" style={{ fontSize: "0.875rem", color: isMasuk ? "#0d7a6b" : "#ef4444" }}>{isMasuk ? `+${formatJumlah(item.jumlah)}` : `-${formatJumlah(item.jumlah)}`}</td>
                           <td className="py-4 px-5 text-center" style={{ fontSize: "0.875rem", color: "#111827", fontWeight: 500 }}>{item.pengambil || "-"}</td>
                           <td className="py-4 px-5 text-center text-gray-500" style={{ fontSize: "0.8125rem" }}>{formattedDate}</td>
                         </tr>
@@ -196,7 +218,8 @@ export function Riwayat({ historyGudang, historySepatu, isLoading, showNotificat
                           <td className="py-4 px-5 font-medium" style={{ fontSize: "0.875rem", color: "#111827" }}>{item.nama}</td>
                           <td className="py-4 px-5 text-center" style={{ fontSize: "0.875rem", color: "#374151" }}>{item.ukuran}</td>
                           <td className="py-4 px-5 text-center"><span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold capitalize" style={{ backgroundColor: isMasuk ? "#e8f5f2" : "#fee2e2", color: isMasuk ? "#0d7a6b" : "#ef4444" }}>{item.aktivitas}</span></td>
-                          <td className="py-4 px-5 text-center font-bold" style={{ fontSize: "0.875rem", color: isMasuk ? "#0d7a6b" : "#ef4444" }}>{isMasuk ? `+${item.jumlah}` : `-${item.jumlah}`}</td>
+                          {/* PENERAPAN FORMAT DI TABEL RIWAYAT SEPATU */}
+                          <td className="py-4 px-5 text-center font-bold" style={{ fontSize: "0.875rem", color: isMasuk ? "#0d7a6b" : "#ef4444" }}>{isMasuk ? `+${formatJumlah(item.jumlah)}` : `-${formatJumlah(item.jumlah)}`}</td>
                           <td className="py-4 px-5 text-center text-gray-500" style={{ fontSize: "0.8125rem" }}>{formattedDate}</td>
                         </tr>
                       );

@@ -4,6 +4,16 @@ import { AlertTriangle, ChevronDown, Search, Calendar } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
+// FUNGSI PINTAR FORMAT STOK
+const formatNilaiStok = (stok, satuan) => {
+  if (stok === undefined || stok === null) return 0;
+  const num = Number(stok);
+  if (satuan && (satuan.toLowerCase() === "meter" || satuan.toLowerCase() === "kaki")) {
+    return parseFloat(num.toFixed(1)); 
+  }
+  return Math.round(num); 
+};
+
 // MENERIMA PROPS DARI App.jsx
 export function Beranda({ dataGudang, dataBarangJadi, dataRiwayat, isLoading }) {
   const [category, setCategory] = useState("Tapak");
@@ -20,7 +30,11 @@ export function Beranda({ dataGudang, dataBarangJadi, dataRiwayat, isLoading }) 
 
   const currentCategoryData = isSepatu ? dataBarangJadi : dataGudang.filter((item) => item.kategori === category);
   const totalJenis = currentCategoryData.length;
-  const totalStok = currentCategoryData.reduce((sum, item) => sum + item.stok, 0);
+  
+  // PENERAPAN FORMAT PADA TOTAL STOK
+  const totalStokRaw = currentCategoryData.reduce((sum, item) => sum + Number(item.stok), 0);
+  const isDesimal = category === "Lapis" || category === "Kulit";
+  const totalStok = isSepatu ? Math.round(totalStokRaw) : (isDesimal ? parseFloat(totalStokRaw.toFixed(1)) : Math.round(totalStokRaw));
   
   const lowStockItemsAll = currentCategoryData.filter((item) => isSepatu ? item.stok <= 10 : item.stok < 20);
   const stokRendah = lowStockItemsAll.length;
@@ -51,9 +65,16 @@ export function Beranda({ dataGudang, dataBarangJadi, dataRiwayat, isLoading }) 
       else if (dateNum > 14 && dateNum <= 21) weekIndex = 2;
       else if (dateNum > 21) weekIndex = 3;
 
-      if (r.aktivitas === "masuk") weeks[weekIndex].masuk += r.jumlah;
-      else if (r.aktivitas === "keluar") weeks[weekIndex].keluar += r.jumlah;
+      if (r.aktivitas === "masuk") weeks[weekIndex].masuk += Number(r.jumlah);
+      else if (r.aktivitas === "keluar") weeks[weekIndex].keluar += Number(r.jumlah);
     });
+
+    // Mencegah angka float aneh di Chart (e.g. 0.30000004)
+    weeks.forEach(w => {
+      w.masuk = parseFloat(w.masuk.toFixed(1));
+      w.keluar = parseFloat(w.keluar.toFixed(1));
+    });
+
     return weeks;
   };
 
@@ -80,7 +101,6 @@ export function Beranda({ dataGudang, dataBarangJadi, dataRiwayat, isLoading }) 
     return { bg: "#e8f5f2", text: "#0d7a6b" };
   };
 
-  // Gunakan prop isLoading dari App.jsx
   if (isLoading) {
     return (
       <div className="flex-1 flex flex-col min-h-screen items-center justify-center" style={{ backgroundColor: "#f5f7fa" }}>
@@ -183,7 +203,10 @@ export function Beranda({ dataGudang, dataBarangJadi, dataRiwayat, isLoading }) 
                       <tr key={item.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
                         <td className="py-3 px-4 sm:px-6 font-medium" style={{ fontSize: "0.875rem", color: "#111827" }}>{item.nama}</td>
                         <td className="py-3 px-4 sm:px-6" style={{ fontSize: "0.875rem", color: "#374151" }}>{isSepatu ? item.ukuran : item.type}</td>
-                        <td className="py-3 px-4 sm:px-6 font-semibold" style={{ fontSize: "0.875rem", color: item.stok === 0 ? "#ef4444" : "#f59e0b" }}>{item.stok} <span className="text-gray-400 font-normal">{!isSepatu && item.satuan}</span></td>
+                        <td className="py-3 px-4 sm:px-6 font-semibold" style={{ fontSize: "0.875rem", color: item.stok === 0 ? "#ef4444" : "#f59e0b" }}>
+                          {isSepatu ? Math.round(item.stok) : formatNilaiStok(item.stok, item.satuan)} 
+                          <span className="text-gray-400 font-normal">{!isSepatu && ` ${item.satuan}`}</span>
+                        </td>
                         <td className="py-3 px-4 sm:px-6">
                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: status.bg, color: status.text }}>{item.status || (item.stok === 0 ? "Habis" : "Menipis")}</span>
                         </td>
